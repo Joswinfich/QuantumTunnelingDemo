@@ -539,8 +539,7 @@
                     this.velocity += (Math.random() - 0.5) * 20;
                 }
                 
-                // Apply some friction to prevent infinite bouncing
-                this.velocity *= 0.999;
+                // Maintain momentum - no friction for realistic physics
                 
                 this.x += this.velocity * 0.1;
             }
@@ -675,27 +674,16 @@
                     const minDistance = 16; // Diameter of particles
                     
                     if (distance < minDistance) {
-                        // Elastic collision
-                        const angle = Math.atan2(dy, dx);
-                        const sin = Math.sin(angle);
-                        const cos = Math.cos(angle);
-                        
-                        // Rotate velocities
-                        const v1x = p1.velocity * cos;
-                        const v1y = p1.velocity * sin * 0.1; // Small perpendicular component
-                        const v2x = p2.velocity * cos;
-                        const v2y = p2.velocity * sin * 0.1;
-                        
-                        // Swap velocities (equal mass)
-                        const temp = v1x;
-                        p1.velocity = v2x;
+                        // Perfect elastic collision - swap velocities completely
+                        const temp = p1.velocity;
+                        p1.velocity = p2.velocity;
                         p2.velocity = temp;
                         
                         // Add small random perpendicular velocity for visual interest
-                        p1.y += (Math.random() - 0.5) * 5;
-                        p2.y += (Math.random() - 0.5) * 5;
+                        p1.y += (Math.random() - 0.5) * 3;
+                        p2.y += (Math.random() - 0.5) * 3;
                         
-                        // Separate particles
+                        // Separate particles to prevent sticking
                         const overlap = minDistance - distance;
                         const separationX = (dx / distance) * overlap * 0.5;
                         const separationY = (dy / distance) * overlap * 0.5;

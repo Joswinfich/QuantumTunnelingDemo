@@ -953,8 +953,7 @@
                     this.velocity += (Math.random() - 0.5) * 20;
                 }
                 
-                // Apply friction to prevent infinite bouncing
-                this.velocity *= 0.999;
+                // Remove friction line to maintain momentum
                 
                 // Check for collisions with other classical particles
                 const collisionRadius = 20;
@@ -1622,6 +1621,44 @@
             ctx.globalAlpha = 1;
         }
         
+        // Collision detection for classical particles with momentum conservation
+        function checkClassicalCollisions() {
+            const classicalParticles = particles.filter(p => p.type === 'classical' && p.opacity > 0.5);
+            
+            for (let i = 0; i < classicalParticles.length; i++) {
+                for (let j = i + 1; j < classicalParticles.length; j++) {
+                    const p1 = classicalParticles[i];
+                    const p2 = classicalParticles[j];
+                    
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = 16; // Diameter of particles
+                    
+                    if (distance < minDistance) {
+                        // Perfect elastic collision - swap velocities completely
+                        const temp = p1.velocity;
+                        p1.velocity = p2.velocity;
+                        p2.velocity = temp;
+                        
+                        // Add small random perpendicular velocity for visual interest
+                        p1.y += (Math.random() - 0.5) * 3;
+                        p2.y += (Math.random() - 0.5) * 3;
+                        
+                        // Separate particles to prevent sticking
+                        const overlap = minDistance - distance;
+                        const separationX = (dx / distance) * overlap * 0.5;
+                        const separationY = (dy / distance) * overlap * 0.5;
+                        
+                        p1.x -= separationX;
+                        p1.y -= separationY;
+                        p2.x += separationX;
+                        p2.y += separationY;
+                    }
+                }
+            }
+        }
+        
         function drawEnhancedProbabilityGraph() {
             if (probabilityHistory.length < 2) return;
             
@@ -1727,6 +1764,9 @@
             if (mode !== 'basic') {
                 drawEnhancedProbabilityGraph();
             }
+            
+            // Check for classical particle collisions
+            checkClassicalCollisions();
             
             // Update and draw particles with enhanced effects
             particles = particles.filter(particle => {
