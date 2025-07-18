@@ -659,7 +659,7 @@
             particles.push(new Particle(type, energy, barrierHeight, barrierWidth));
         }
         
-        // Collision detection for classical particles
+        // Collision detection for classical particles - billiard ball physics
         function checkClassicalCollisions() {
             const classicalParticles = particles.filter(p => p.type === 'classical' && p.opacity > 0.5);
             
@@ -671,20 +671,19 @@
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = 16; // Diameter of particles
+                    const radius = 8; // Particle radius
+                    const minDistance = radius * 2; // Particles touch when centers are 2*radius apart
                     
-                    if (distance < minDistance) {
-                        // Perfect elastic collision - swap velocities completely
+                    if (distance <= minDistance && distance > 0) {
+                        console.log('Collision detected between particles at distance:', distance);
+                        
+                        // Perfect elastic collision - for equal mass spheres, exchange velocities
                         const temp = p1.velocity;
                         p1.velocity = p2.velocity;
                         p2.velocity = temp;
                         
-                        // Add small random perpendicular velocity for visual interest
-                        p1.y += (Math.random() - 0.5) * 3;
-                        p2.y += (Math.random() - 0.5) * 3;
-                        
-                        // Separate particles to prevent sticking
-                        const overlap = minDistance - distance;
+                        // Separate particles to prevent overlap
+                        const overlap = minDistance - distance + 1; // Add 1 for safety margin
                         const separationX = (dx / distance) * overlap * 0.5;
                         const separationY = (dy / distance) * overlap * 0.5;
                         
@@ -692,6 +691,8 @@
                         p1.y -= separationY;
                         p2.x += separationX;
                         p2.y += separationY;
+                        
+                        console.log('Velocities after collision - p1:', p1.velocity, 'p2:', p2.velocity);
                     }
                 }
             }
