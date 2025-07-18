@@ -76,7 +76,6 @@
         }
         
         button {
-            background-color: #1976d2;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -87,12 +86,28 @@
             width: 100%;
         }
         
-        button:hover {
-            background-color: #1565c0;
+        #fireClassical {
+            background-color: #ff6b6b;
         }
         
-        button:active {
-            background-color: #0d47a1;
+        #fireClassical:hover {
+            background-color: #ff5252;
+        }
+        
+        #fireClassical:active {
+            background-color: #ff1744;
+        }
+        
+        #fireQuantum {
+            background-color: #4ecdc4;
+        }
+        
+        #fireQuantum:hover {
+            background-color: #26a69a;
+        }
+        
+        #fireQuantum:active {
+            background-color: #00897b;
         }
         
         .info-panel {
@@ -189,7 +204,11 @@
                 </div>
                 
                 <div class="control-group">
-                    <button id="fireParticle">Fire Particle</button>
+                    <button id="fireClassical">Fire Classical</button>
+                </div>
+                
+                <div class="control-group">
+                    <button id="fireQuantum">Fire Quantum</button>
                 </div>
             </div>
             
@@ -280,7 +299,8 @@
         const barrierHeightSlider = document.getElementById('barrierHeight');
         const particleEnergySlider = document.getElementById('particleEnergy');
         const barrierWidthSlider = document.getElementById('barrierWidth');
-        const fireButton = document.getElementById('fireParticle');
+        const fireClassicalButton = document.getElementById('fireClassical');
+        const fireQuantumButton = document.getElementById('fireQuantum');
         
         // Display elements
         const barrierHeightValue = document.getElementById('barrierHeightValue');
@@ -300,7 +320,8 @@
         barrierHeightSlider.addEventListener('input', updateDisplay);
         particleEnergySlider.addEventListener('input', updateDisplay);
         barrierWidthSlider.addEventListener('input', updateDisplay);
-        fireButton.addEventListener('click', fireNewParticle);
+        fireClassicalButton.addEventListener('click', () => fireNewParticle('classical'));
+        fireQuantumButton.addEventListener('click', () => fireNewParticle('quantum'));
         
         function updateDisplay() {
             const V0 = parseFloat(barrierHeightSlider.value);
@@ -594,17 +615,61 @@
             }
         }
         
-        function fireNewParticle() {
+        function fireNewParticle(type) {
             const energy = parseFloat(particleEnergySlider.value);
             const barrierHeight = parseFloat(barrierHeightSlider.value);
             const barrierWidth = parseFloat(barrierWidthSlider.value);
             
-            // Add both classical and quantum particles
-            particles.push(new Particle('classical', energy, barrierHeight, barrierWidth));
+            particles.push(new Particle(type, energy, barrierHeight, barrierWidth));
+        }
+        
+        // Collision detection for classical particles
+        function checkClassicalCollisions() {
+            const classicalParticles = particles.filter(p => p.type === 'classical' && p.opacity > 0.5);
             
-            setTimeout(() => {
-                particles.push(new Particle('quantum', energy, barrierHeight, barrierWidth));
-            }, 500);
+            for (let i = 0; i < classicalParticles.length; i++) {
+                for (let j = i + 1; j < classicalParticles.length; j++) {
+                    const p1 = classicalParticles[i];
+                    const p2 = classicalParticles[j];
+                    
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const minDistance = 16; // Diameter of particles
+                    
+                    if (distance < minDistance) {
+                        // Elastic collision
+                        const angle = Math.atan2(dy, dx);
+                        const sin = Math.sin(angle);
+                        const cos = Math.cos(angle);
+                        
+                        // Rotate velocities
+                        const v1x = p1.velocity * cos;
+                        const v1y = p1.velocity * sin * 0.1; // Small perpendicular component
+                        const v2x = p2.velocity * cos;
+                        const v2y = p2.velocity * sin * 0.1;
+                        
+                        // Swap velocities (equal mass)
+                        const temp = v1x;
+                        p1.velocity = v2x;
+                        p2.velocity = temp;
+                        
+                        // Add small random perpendicular velocity for visual interest
+                        p1.y += (Math.random() - 0.5) * 5;
+                        p2.y += (Math.random() - 0.5) * 5;
+                        
+                        // Separate particles
+                        const overlap = minDistance - distance;
+                        const separationX = (dx / distance) * overlap * 0.5;
+                        const separationY = (dy / distance) * overlap * 0.5;
+                        
+                        p1.x -= separationX;
+                        p1.y -= separationY;
+                        p2.x += separationX;
+                        p2.y += separationY;
+                    }
+                }
+            }
         }
         
         function drawBarrier() {
@@ -693,6 +758,9 @@
             
             drawBarrier();
             drawProbabilityGraph();
+            
+            // Check collisions before updating particles
+            checkClassicalCollisions();
             
             // Update and draw particles
             particles = particles.filter(particle => {
