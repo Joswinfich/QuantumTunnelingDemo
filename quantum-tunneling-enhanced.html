@@ -849,28 +849,40 @@
                 this.coherence = controls.quantumCoherence ? parseFloat(controls.quantumCoherence.value) : 0.8;
                 this.mass = controls.particleMass ? parseFloat(controls.particleMass.value) : 1.0;
                 
+                // Lifetime system for automatic despawn
+                this.maxLifetime = 300 + Math.random() * 200; // 300-500 frames (5-8 seconds at 60fps)
+                this.lifetime = 0;
+                this.despawning = false;
+                
+                // Wall bounce counting system for classical particles
+                this.wallBounces = 0;
+                this.maxWallBounces = 2; // Allow 2 wall bounces before despawn
+                
                 // Enhanced barrier properties
                 this.barrierStart = 400;
                 this.barrierEnd = 400 + barrierWidth * 4;
                 
-                // Get all current control values for dynamic probability calculation
-                const temp = parseFloat(controls.temperature.value);
-                const magneticField = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
-                const electricField = controls.electricField ? parseFloat(controls.electricField.value) : 0;
-                
-                // Calculate transmission probability with all field effects
-                this.transmissionProb = calculateEnhancedTransmissionProbability(
-                    energy, barrierHeight, barrierWidth, temp, this.mass, this.coherence, magneticField, electricField
-                );
-                
-                // Quantum decision - each particle rolls the dice!
+                // Classical particles NEVER tunnel - no probability calculation needed
                 if (this.type === 'quantum') {
+                    // Get control values for quantum probability calculation only
+                    const temp = parseFloat(controls.temperature.value);
+                    const magneticField = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
+                    const electricField = controls.electricField ? parseFloat(controls.electricField.value) : 0;
+                    
+                    // Calculate transmission probability with all field effects
+                    this.transmissionProb = calculateEnhancedTransmissionProbability(
+                        energy, barrierHeight, barrierWidth, temp, this.mass, this.coherence, magneticField, electricField
+                    );
+                    
                     // Small individual variation per particle
                     const variation = 0.03 * (Math.random() - 0.5);
                     const actualProb = Math.max(0, Math.min(1, this.transmissionProb + variation));
                     this.willTunnel = Math.random() < actualProb;
                     this.actualTransmissionProb = actualProb;
                 } else {
+                    // Classical particles: no tunneling, no probability calculation
+                    this.transmissionProb = 0;
+                    this.willTunnel = false;
                     this.actualTransmissionProb = 0;
                 }
                 
@@ -881,6 +893,32 @@
             }
             
             update() {
+                // Increment lifetime
+                this.lifetime++;
+                
+                // Check for automatic despawn based on lifetime
+                if (this.lifetime > this.maxLifetime && !this.despawning) {
+                    this.despawning = true;
+                    // Count particle before despawning based on position
+                    if (!this.counted) {
+                        if (this.x > canvas.width / 2) {
+                            particleHistory.transmitted++;
+                        } else {
+                            particleHistory.reflected++;
+                        }
+                        this.counted = true;
+                    }
+                }
+                
+                // Despawn animation
+                if (this.despawning) {
+                    this.opacity *= 0.92; // Smooth fade out
+                    // Add sparkle effect during despawn
+                    if (Math.random() < 0.3) {
+                        this.phase += Math.random() * 0.5;
+                    }
+                }
+                
                 // Enhanced trail with physics
                 this.trail.push({ 
                     x: this.x, 
@@ -893,25 +931,29 @@
                     this.trail.shift();
                 }
                 
-                if (this.type === 'classical') {
-                    this.updateClassical();
-                } else {
-                    this.updateQuantum();
+                // Only update movement if not despawning
+                if (!this.despawning) {
+                    if (this.type === 'classical') {
+                        this.updateClassical();
+                    } else {
+                        this.updateQuantum();
+                    }
                 }
                 
-                // Enhanced fading with fixed despawn boundaries
+                // Enhanced fading with fixed despawn boundaries (backup despawn)
                 if (this.x > canvas.width + 50 || this.x < -50) {
-                    this.opacity *= 0.93;
+                    if (!this.despawning) {
+                        this.despawning = true;
+                    }
+                    this.opacity *= 0.95;
                     
                     if (this.opacity < 0.1 && !this.counted) {
                         // Position-based counting: transmitted if x > canvas.width + 25, reflected if x < -25
                         if (this.x > canvas.width + 25) {
                             particleHistory.transmitted++;
-                            console.log(`${this.type} particle transmitted at x=${this.x.toFixed(1)}! Total transmitted: ${particleHistory.transmitted}`);
                             this.counted = true;
                         } else if (this.x < -25) {
                             particleHistory.reflected++;
-                            console.log(`${this.type} particle reflected at x=${this.x.toFixed(1)}! Total reflected: ${particleHistory.reflected}`);
                             this.counted = true;
                         }
                     }
@@ -929,9 +971,23 @@
                 // Temperature effects on classical motion (thermal velocity)
                 const thermalBoost = 1 + (temp - 300) / 2000;
                 
-                // Magnetic field deflection (Lorentz force)
-                const magneticDeflection = magneticField * Math.sin(this.x * 0.01 + time * 0.05) * 1.5;
-                this.y += magneticDeflection;
+                // Magnetic field deflection (Lorentz force) - allows particles to curve around barrier
+                if (magneticField > 0.1) {
+                    // Strong deflection when near barrier to curve around it
+                    const distanceToBarrier = Math.abs(this.x - this.barrierStart);
+                    const deflectionStrength = magneticField * 15; // Much stronger effect
+                    
+                    if (distanceToBarrier < 100) {
+                        // Curve upward or downward based on approach direction
+                        const curveDirection = this.y < canvas.height / 2 ? -1 : 1;
+                        const proximityFactor = Math.exp(-distanceToBarrier / 30); // Stronger when closer
+                        this.y += curveDirection * deflectionStrength * proximityFactor;
+                    } else {
+                        // Normal oscillating magnetic field when far from barrier
+                        const magneticDeflection = magneticField * Math.sin(this.x * 0.01 + time * 0.05) * 2;
+                        this.y += magneticDeflection;
+                    }
+                }
                 
                 // Electric field acceleration
                 const electricAcceleration = 1 + electricField * 0.3;
@@ -949,61 +1005,120 @@
                         this.y = bottomWall;
                     }
                     
+                    // Count wall bounces for classical particles
+                    this.wallBounces++;
+                    console.log(`Classical particle bounced off wall! Bounce count: ${this.wallBounces}/${this.maxWallBounces}`);
+                    
+                    // Check if max bounces reached
+                    if (this.wallBounces >= this.maxWallBounces) {
+                        console.log('Classical particle reached max bounces - starting despawn');
+                        this.despawning = true;
+                        // Count as reflected since it didn't make it through
+                        if (!this.counted) {
+                            particleHistory.reflected++;
+                            this.counted = true;
+                        }
+                        return; // Start despawning immediately
+                    }
+                    
                     // Add small random horizontal velocity component on wall bounce
                     this.velocity += (Math.random() - 0.5) * 20;
                 }
                 
                 // Remove friction line to maintain momentum
                 
-                // Check for collisions with other classical particles
-                const collisionRadius = 20;
+                // Photon-like collisions with other classical particles
+                const collisionRadius = 18;
                 for (const other of particles) {
-                    if (other !== this && other.type === 'classical' && !other.reflected && !this.reflected) {
+                    if (other !== this && other.type === 'classical' && other.opacity > 0.5) {
                         const dx = this.x - other.x;
                         const dy = this.y - other.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         
-                        if (distance < collisionRadius) {
-                            // Elastic collision - exchange velocities
-                            const tempVelocity = this.velocity;
-                            this.velocity = other.velocity;
-                            other.velocity = tempVelocity;
+                        if (distance < collisionRadius && distance > 0) {
+                            // Perfect elastic collision - like bouncing photons
+                            const speed1 = Math.abs(this.velocity);
+                            const speed2 = Math.abs(other.velocity);
                             
-                            // Separate particles to prevent overlap
-                            const separationForce = collisionRadius - distance;
+                            // 8-ball style elastic collision - both particles reverse direction
+                            this.velocity = -speed1;
+                            other.velocity = -speed2;
+                            
+                            // Strong separation - push particles apart immediately
+                            const pushDistance = collisionRadius + 5;
                             const angle = Math.atan2(dy, dx);
-                            this.x += Math.cos(angle) * separationForce / 2;
-                            this.y += Math.sin(angle) * separationForce / 2;
-                            other.x -= Math.cos(angle) * separationForce / 2;
-                            other.y -= Math.sin(angle) * separationForce / 2;
+                            
+                            // Move this particle away from other
+                            this.x = other.x + Math.cos(angle) * pushDistance;
+                            this.y = other.y + Math.sin(angle) * pushDistance;
+                            
+                            // Move other particle away from this
+                            other.x = this.x - Math.cos(angle) * pushDistance;
+                            other.y = this.y - Math.sin(angle) * pushDistance;
+                            
+                            // Add small random deflection to prevent perfect loops
+                            const deflection = (Math.random() - 0.5) * 0.1;
+                            this.velocity *= (1 + deflection);
+                            other.velocity *= (1 - deflection);
+                            
+                            break; // Only handle one collision per frame
                         }
                     }
                 }
                 
-                // Classical barrier interaction - ALWAYS bounce off
-                if (!this.reflected && this.x >= this.barrierStart - 15) {
-                    // Classical particles NEVER pass through barriers
-                    this.reflected = true;
-                    this.velocity = -Math.abs(this.velocity) * thermalBoost; // Ensure velocity is negative (bounce back)
-                    // Ensure particle doesn't penetrate the barrier
-                    this.x = this.barrierStart - 15;
-                }
+                // BARRIER COLLISION LOGIC - depends on magnetic field strength
+                const barrierDistance = 15; // Safe distance from barrier
+                const barrierHeight = parseFloat(controls.barrierHeight.value) * 120;
+                const barrierTop = canvas.height / 2 - barrierHeight / 2;
+                const barrierBottom = canvas.height / 2 + barrierHeight / 2;
                 
-                // Apply mass effects to velocity
-                const massSpeedFactor = 2.0 / this.mass;
-                const nextVelocity = this.velocity * 0.08 * massSpeedFactor * thermalBoost * electricAcceleration * simulationSpeed;
+                // Store original speed to maintain it (ensure minimum speed)
+                const originalSpeed = Math.max(Math.abs(this.velocity), 50); // Minimum speed of 50
                 
-                // Prevent classical particle from EVER entering barrier
-                if (!this.reflected) {
-                    if (this.x + nextVelocity >= this.barrierStart) {
-                        this.x = this.barrierStart - 15;
+                // Check if particle can go around barrier with magnetic field
+                const canGoAround = magneticField > 0.5 && (this.y < barrierTop - 10 || this.y > barrierBottom + 10);
+                
+                if (!canGoAround) {
+                    // STANDARD BARRIER COLLISION - particle hits the physical barrier
+                    
+                    // FIRST: Check current position and force bounce if at barrier
+                    if (this.x >= this.barrierStart - barrierDistance && 
+                        this.y >= barrierTop - 10 && this.y <= barrierBottom + 10) {
                         this.reflected = true;
-                        this.velocity = -Math.abs(this.velocity) * thermalBoost;
-                        return; // Don't update position this frame
+                        this.velocity = -originalSpeed; // Always bounce back with full speed
+                        this.x = this.barrierStart - barrierDistance - 2; // Extra safety margin
+                        return; // Stop here, don't move this frame
+                    }
+                    
+                    // SECOND: Predictive collision check
+                    if (!this.reflected && this.velocity > 0) {
+                        const massSpeedFactor = 2.0 / this.mass;
+                        const movementSpeed = originalSpeed * massSpeedFactor * 0.08 * simulationSpeed;
+                        const nextX = this.x + movementSpeed;
+                        
+                        if (nextX >= this.barrierStart - barrierDistance && 
+                            this.y >= barrierTop - 10 && this.y <= barrierBottom + 10) {
+                            // About to hit barrier - force immediate bounce
+                            this.reflected = true;
+                            this.velocity = -originalSpeed; // Full speed bounce
+                            this.x = Math.min(this.x, this.barrierStart - barrierDistance - 2);
+                            return; // Stop movement this frame
+                        }
                     }
                 }
                 
+                // THIRD: Calculate movement with proper speed
+                const massSpeedFactor = 2.0 / this.mass;
+                const movementSpeed = originalSpeed * massSpeedFactor * 0.08 * simulationSpeed;
+                const nextVelocity = this.velocity > 0 ? movementSpeed : -movementSpeed;
+                
+                // FOURTH: Safe to move - update position
                 this.x += nextVelocity;
+                
+                // FIFTH: Ensure velocity stays strong (prevent getting stuck)
+                if (Math.abs(this.velocity) < 30) {
+                    this.velocity = this.velocity > 0 ? 50 : -50;
+                }
                 
                 // Keep particle in bounds with particle radius
                 this.y = Math.max(particleRadius, Math.min(canvas.height - particleRadius, this.y));

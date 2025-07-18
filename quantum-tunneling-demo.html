@@ -453,48 +453,87 @@
                 this.trail = [];
                 this.counted = false;
                 
+                // Lifetime system for automatic despawn
+                this.maxLifetime = 300 + Math.random() * 200; // 300-500 frames (5-8 seconds at 60fps)
+                this.lifetime = 0;
+                this.despawning = false;
+                
                 // Barrier position
                 this.barrierStart = 350;
                 this.barrierEnd = 350 + barrierWidth * 3;
                 
-                // Transmission probability with dynamic adaptation
-                const baseProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
-                
-                // Apply dynamic probability with fluctuations
-                if (dynamicProbability !== null) {
-                    this.transmissionProb = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
-                } else {
-                    this.transmissionProb = baseProb;
-                }
-                
-                // Decide fate for quantum particle
+                // Classical particles NEVER tunnel - no probability calculation needed
                 if (this.type === 'quantum') {
+                    // Transmission probability with dynamic adaptation
+                    const baseProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
+                    
+                    // Apply dynamic probability with fluctuations
+                    if (dynamicProbability !== null) {
+                        this.transmissionProb = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
+                    } else {
+                        this.transmissionProb = baseProb;
+                    }
+                    
+                    // Decide fate for quantum particle
                     this.willTunnel = Math.random() < this.transmissionProb;
+                } else {
+                    // Classical particles: no tunneling, no probability calculation
+                    this.transmissionProb = 0;
+                    this.willTunnel = false;
                 }
             }
             
             update() {
+                // Increment lifetime
+                this.lifetime++;
+                
+                // Check for automatic despawn based on lifetime
+                if (this.lifetime > this.maxLifetime && !this.despawning) {
+                    this.despawning = true;
+                    // Count particle before despawning based on position
+                    if (!this.counted) {
+                        if (this.x > canvas.width / 2) {
+                            particleHistory.transmitted++;
+                        } else {
+                            particleHistory.reflected++;
+                        }
+                        this.counted = true;
+                        updateDisplay();
+                    }
+                }
+                
+                // Despawn animation
+                if (this.despawning) {
+                    this.opacity *= 0.92; // Smooth fade out
+                }
+                
                 // Store trail
                 this.trail.push({ x: this.x, y: this.y, opacity: this.opacity });
                 if (this.trail.length > 30) {
                     this.trail.shift();
                 }
                 
-                if (this.type === 'classical') {
-                    this.updateClassical();
-                } else {
-                    this.updateQuantum();
+                // Only update movement if not despawning
+                if (!this.despawning) {
+                    if (this.type === 'classical') {
+                        this.updateClassical();
+                    } else {
+                        this.updateQuantum();
+                    }
                 }
                 
-                // Fade out when far enough (different boundaries for different particles)
+                // Fade out when far enough (backup despawn system)
                 const leftBoundary = this.type === 'classical' ? -50 : 20;
                 const rightBoundary = this.type === 'classical' ? canvas.width + 50 : canvas.width - 50;
                 
                 if (this.x > rightBoundary || this.x < leftBoundary) {
+                    if (!this.despawning) {
+                        this.despawning = true;
+                    }
                     this.opacity *= 0.95;
                     
                     // Update particle history when particle is about to disappear
-                    if (this.opacity < 0.1 && this.type === 'quantum' && !this.counted) {
+                    if (this.opacity < 0.1 && !this.counted) {
                         if (this.x > canvas.width - 100) {
                             particleHistory.transmitted++;
                         } else if (this.x < 100) {
@@ -507,39 +546,84 @@
             }
             
             updateClassical() {
-                // Check if particle is at or past the barrier - ALWAYS bounce off
-                if (!this.reflected && this.x >= this.barrierStart - 10) {
-                    // Classical particles NEVER pass through barriers
+                // Store original speed to maintain it
+                const originalSpeed = Math.abs(this.velocity);
+                
+                // ABSOLUTE BARRIER COLLISION - Classical particles NEVER pass through
+                const barrierDistance = 15; // Safe distance from barrier
+                
+                // Check current position first
+                if (this.x >= this.barrierStart - barrierDistance) {
                     this.reflected = true;
-                    this.velocity = -Math.abs(this.velocity); // Ensure velocity is negative (bounce back)
-                    // Ensure particle doesn't penetrate the barrier
-                    this.x = this.barrierStart - 10;
+                    this.velocity = -originalSpeed; // Maintain original speed, just reverse direction
+                    this.x = this.barrierStart - barrierDistance;
+                    return; // Stop here, don't move
                 }
                 
-                // Prevent classical particle from EVER entering barrier
-                if (!this.reflected) {
-                    if (this.x + this.velocity * 0.1 >= this.barrierStart) {
-                        this.x = this.barrierStart - 10;
+                // Calculate next position
+                const nextVelocity = (this.velocity > 0 ? originalSpeed : -originalSpeed) * 0.1;
+                
+                // Check if next position would hit barrier
+                if (!this.reflected && this.velocity > 0) {
+                    const nextX = this.x + nextVelocity;
+                    if (nextX >= this.barrierStart - barrierDistance) {
+                        // Hit barrier - bounce immediately with original speed
                         this.reflected = true;
-                        this.velocity = -Math.abs(this.velocity);
+                        this.velocity = -originalSpeed;
+                        this.x = this.barrierStart - barrierDistance;
+                        return; // Stop here, don't move
                     }
                 }
                 
-                // Wall collisions (top and bottom)
-                const particleRadius = 8;
-                if (this.y <= particleRadius) {
-                    this.y = particleRadius;
-                    // Add small random horizontal velocity component on wall bounce
-                    this.velocity += (Math.random() - 0.5) * 20;
-                } else if (this.y >= canvas.height - particleRadius) {
-                    this.y = canvas.height - particleRadius;
-                    // Add small random horizontal velocity component on wall bounce
-                    this.velocity += (Math.random() - 0.5) * 20;
+                // 8-ball style collisions with other classical particles
+                const collisionRadius = 18;
+                for (const other of particles) {
+                    if (other !== this && other.type === 'classical' && other.opacity > 0.5 && !other.despawning && !this.despawning) {
+                        const dx = this.x - other.x;
+                        const dy = this.y - other.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < collisionRadius && distance > 0) {
+                            // 8-ball style elastic collision - both particles reverse direction
+                            const speed1 = Math.abs(this.velocity);
+                            const speed2 = Math.abs(other.velocity);
+                            
+                            // Reverse both velocities like bouncing billiard balls
+                            this.velocity = -speed1;
+                            other.velocity = -speed2;
+                            
+                            // Strong separation - push particles apart immediately
+                            const pushDistance = collisionRadius + 5;
+                            const angle = Math.atan2(dy, dx);
+                            
+                            // Move this particle away from other
+                            this.x = other.x + Math.cos(angle) * pushDistance;
+                            this.y = other.y + Math.sin(angle) * pushDistance;
+                            
+                            // Move other particle away from this
+                            other.x = this.x - Math.cos(angle) * pushDistance;
+                            other.y = this.y - Math.sin(angle) * pushDistance;
+                            
+                            break; // Only handle one collision per frame
+                        }
+                    }
                 }
                 
-                // Maintain momentum - no friction for realistic physics
+                // Wall collisions (top and bottom) with speed preservation
+                const particleRadius = 8;
+                if (this.y <= particleRadius || this.y >= canvas.height - particleRadius) {
+                    if (this.y <= particleRadius) {
+                        this.y = particleRadius;
+                    } else {
+                        this.y = canvas.height - particleRadius;
+                    }
+                    // Add small random horizontal velocity component but preserve speed
+                    const speedVariation = (Math.random() - 0.5) * 0.1;
+                    this.velocity = originalSpeed * (1 + speedVariation) * (this.velocity > 0 ? 1 : -1);
+                }
                 
-                this.x += this.velocity * 0.1;
+                // Update position maintaining speed
+                this.x += nextVelocity;
             }
             
             updateQuantum() {
