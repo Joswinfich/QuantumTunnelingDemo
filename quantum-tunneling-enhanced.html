@@ -147,6 +147,11 @@
             transform: translateY(0);
         }
         
+        #resetStats:hover {
+            background: linear-gradient(45deg, #616161, #9e9e9e);
+            box-shadow: 0 6px 20px rgba(117, 117, 117, 0.4);
+        }
+        
         .info-panel {
             background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
             padding: 20px;
@@ -1193,9 +1198,7 @@
             
             // Clear simulation state
             clearAllParticles();
-            
-            // Reset best success rate
-            bestSuccessRate = 0;
+            resetStats();
             
             // Show reset confirmation
             const challengeStatus = document.getElementById('challengeStatus');
@@ -1224,7 +1227,7 @@
                     const label = item.querySelector('.stat-label').textContent;
                     const value = item.querySelector('.stat-value');
                     
-                    if (label.includes('Transmission') || label.includes('Reflection') || label.includes('Wavelength') || label.includes('Fluctuation')) {
+                    if (label.includes('Success Rate') || label.includes('Reflection') || label.includes('Wavelength') || label.includes('Theoretical')) {
                         item.style.display = 'none';
                     } else {
                         item.style.display = 'block';
@@ -1235,7 +1238,7 @@
                 allStatItems.forEach(item => {
                     const label = item.querySelector('.stat-label').textContent;
                     
-                    if (label.includes('Transmission') || label.includes('Reflection') || label.includes('Classical') || label.includes('Particles') || label.includes('Success') || label.includes('Challenge') || label.includes('Best')) {
+                    if (label.includes('Success Rate') || label.includes('Reflection') || label.includes('Classical') || label.includes('Particles') || label.includes('Challenge') || label.includes('Best') || label.includes('Theoretical')) {
                         item.style.display = 'block';
                     } else {
                         item.style.display = 'none';

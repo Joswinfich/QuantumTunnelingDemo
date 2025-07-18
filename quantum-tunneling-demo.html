@@ -110,6 +110,14 @@
             background-color: #00897b;
         }
         
+        #resetStats:hover {
+            background-color: #616161 !important;
+        }
+        
+        #resetStats:active {
+            background-color: #424242 !important;
+        }
+        
         .info-panel {
             background-color: #2a2a2a;
             padding: 20px;
@@ -210,6 +218,10 @@
                 <div class="control-group">
                     <button id="fireQuantum">Fire Quantum</button>
                 </div>
+                
+                <div class="control-group">
+                    <button id="resetStats" style="background-color: #757575;">Reset Stats</button>
+                </div>
             </div>
             
             <div class="legend">
@@ -301,6 +313,7 @@
         const barrierWidthSlider = document.getElementById('barrierWidth');
         const fireClassicalButton = document.getElementById('fireClassical');
         const fireQuantumButton = document.getElementById('fireQuantum');
+        const resetStatsButton = document.getElementById('resetStats');
         
         // Display elements
         const barrierHeightValue = document.getElementById('barrierHeightValue');
@@ -322,6 +335,12 @@
         barrierWidthSlider.addEventListener('input', updateDisplay);
         fireClassicalButton.addEventListener('click', () => fireNewParticle('classical'));
         fireQuantumButton.addEventListener('click', () => fireNewParticle('quantum'));
+        resetStatsButton.addEventListener('click', () => {
+            particleHistory.transmitted = 0;
+            particleHistory.reflected = 0;
+            probabilityHistory = [];
+            updateDisplay();
+        });
         
         function updateDisplay() {
             const V0 = parseFloat(barrierHeightSlider.value);
@@ -332,32 +351,31 @@
             particleEnergyValue.textContent = E.toFixed(1) + ' eV';
             barrierWidthValue.textContent = width + ' nm';
             
-            // Calculate base transmission probability
-            const baseT = calculateTransmissionProbability(E, V0, width);
+            // Calculate theoretical transmission probability
+            const theoreticalT = calculateTransmissionProbability(E, V0, width);
             
-            // Add quantum fluctuations
-            quantumFluctuations = Math.sin(time * 0.02) * 0.05 + Math.sin(time * 0.03) * 0.03;
+            // Calculate actual success rate from particle history
+            const totalParticles = particleHistory.transmitted + particleHistory.reflected;
+            let actualT;
             
-            // Apply dynamic probability based on history
-            if (dynamicProbability === null) {
-                dynamicProbability = baseT;
+            if (totalParticles === 0) {
+                // No particles yet, show theoretical probability
+                actualT = theoreticalT;
+                transmissionProbDisplay.textContent = (actualT * 100).toFixed(2) + '% (theoretical)';
+                reflectionProbDisplay.textContent = ((1 - actualT) * 100).toFixed(2) + '% (theoretical)';
             } else {
-                // Adapt based on particle history
-                const historyFactor = particleHistory.transmitted + particleHistory.reflected > 0 
-                    ? particleHistory.transmitted / (particleHistory.transmitted + particleHistory.reflected)
-                    : 0.5;
-                dynamicProbability = baseT * 0.7 + historyFactor * 0.3;
+                // Show actual success rate based on real outcomes
+                actualT = particleHistory.transmitted / totalParticles;
+                transmissionProbDisplay.textContent = (actualT * 100).toFixed(2) + '% (' + particleHistory.transmitted + '/' + totalParticles + ')';
+                reflectionProbDisplay.textContent = ((1 - actualT) * 100).toFixed(2) + '% (' + particleHistory.reflected + '/' + totalParticles + ')';
             }
             
-            // Add fluctuations to dynamic probability
-            const T = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
-            
             // Update probability history for visualization
-            probabilityHistory.push(T);
+            probabilityHistory.push(actualT);
             if (probabilityHistory.length > 100) probabilityHistory.shift();
             
-            transmissionProbDisplay.textContent = (T * 100).toFixed(2) + '%' + (quantumFluctuations > 0 ? ' ↑' : ' ↓');
-            reflectionProbDisplay.textContent = ((1 - T) * 100).toFixed(2) + '%' + (quantumFluctuations < 0 ? ' ↑' : ' ↓');
+            // Store theoretical probability for particle generation
+            dynamicProbability = theoreticalT;
             
             // Classical prediction
             classicalPredDisplay.textContent = E >= V0 ? 'Passes' : 'Blocked';
@@ -438,17 +456,10 @@
                 this.barrierStart = 350;
                 this.barrierEnd = 350 + barrierWidth * 3;
                 
-                // Transmission probability with dynamic adaptation
-                const baseProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
+                // Use theoretical transmission probability
+                this.transmissionProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
                 
-                // Apply dynamic probability with fluctuations
-                if (dynamicProbability !== null) {
-                    this.transmissionProb = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
-                } else {
-                    this.transmissionProb = baseProb;
-                }
-                
-                // Decide fate for quantum particle
+                // Decide fate for quantum particle based on theoretical probability
                 if (this.type === 'quantum') {
                     this.willTunnel = Math.random() < this.transmissionProb;
                 }
