@@ -905,8 +905,11 @@
                 // Classical barrier interaction
                 if (!this.reflected && this.x >= this.barrierStart - 15) {
                     if (this.energy < this.barrierHeight) {
+                        // Classical particle cannot pass through - must reflect
                         this.reflected = true;
                         this.velocity = -this.velocity * thermalBoost;
+                        // Ensure particle doesn't penetrate the barrier
+                        this.x = this.barrierStart - 15;
                     } else {
                         // Can pass over barrier - apply field effects
                         this.velocity *= electricAcceleration;
@@ -915,7 +918,19 @@
                 
                 // Apply mass effects to velocity
                 const massSpeedFactor = 2.0 / this.mass;
-                this.x += this.velocity * 0.08 * massSpeedFactor * thermalBoost * electricAcceleration * simulationSpeed;
+                const nextVelocity = this.velocity * 0.08 * massSpeedFactor * thermalBoost * electricAcceleration * simulationSpeed;
+                
+                // Prevent classical particle from entering barrier if energy is too low
+                if (this.energy < this.barrierHeight && !this.reflected) {
+                    if (this.x + nextVelocity >= this.barrierStart) {
+                        this.x = this.barrierStart - 15;
+                        this.reflected = true;
+                        this.velocity = -this.velocity * thermalBoost;
+                        return; // Don't update position this frame
+                    }
+                }
+                
+                this.x += nextVelocity;
                 
                 // Keep particle in bounds
                 this.y = Math.max(50, Math.min(canvas.height - 50, this.y));
