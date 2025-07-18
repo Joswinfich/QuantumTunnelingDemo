@@ -110,14 +110,6 @@
             background-color: #00897b;
         }
         
-        #resetStats:hover {
-            background-color: #616161 !important;
-        }
-        
-        #resetStats:active {
-            background-color: #424242 !important;
-        }
-        
         .info-panel {
             background-color: #2a2a2a;
             padding: 20px;
@@ -351,31 +343,40 @@
             particleEnergyValue.textContent = E.toFixed(1) + ' eV';
             barrierWidthValue.textContent = width + ' nm';
             
-            // Calculate theoretical transmission probability
-            const theoreticalT = calculateTransmissionProbability(E, V0, width);
+            // Calculate base transmission probability
+            const baseT = calculateTransmissionProbability(E, V0, width);
             
-            // Calculate actual success rate from particle history
-            const totalParticles = particleHistory.transmitted + particleHistory.reflected;
-            let actualT;
+            // Add quantum fluctuations
+            quantumFluctuations = Math.sin(time * 0.02) * 0.05 + Math.sin(time * 0.03) * 0.03;
             
-            if (totalParticles === 0) {
-                // No particles yet, show theoretical probability
-                actualT = theoreticalT;
-                transmissionProbDisplay.textContent = (actualT * 100).toFixed(2) + '% (theoretical)';
-                reflectionProbDisplay.textContent = ((1 - actualT) * 100).toFixed(2) + '% (theoretical)';
+            // Apply dynamic probability based on history
+            if (dynamicProbability === null) {
+                dynamicProbability = baseT;
             } else {
-                // Show actual success rate based on real outcomes
-                actualT = particleHistory.transmitted / totalParticles;
-                transmissionProbDisplay.textContent = (actualT * 100).toFixed(2) + '% (' + particleHistory.transmitted + '/' + totalParticles + ')';
-                reflectionProbDisplay.textContent = ((1 - actualT) * 100).toFixed(2) + '% (' + particleHistory.reflected + '/' + totalParticles + ')';
+                // Adapt based on particle history
+                const historyFactor = particleHistory.transmitted + particleHistory.reflected > 0 
+                    ? particleHistory.transmitted / (particleHistory.transmitted + particleHistory.reflected)
+                    : 0.5;
+                dynamicProbability = baseT * 0.7 + historyFactor * 0.3;
             }
             
+            // Add fluctuations to dynamic probability
+            const T = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
+            
             // Update probability history for visualization
-            probabilityHistory.push(actualT);
+            probabilityHistory.push(T);
             if (probabilityHistory.length > 100) probabilityHistory.shift();
             
-            // Store theoretical probability for particle generation
-            dynamicProbability = theoreticalT;
+            // Show actual success rate if we have data, otherwise theoretical
+            const totalParticles = particleHistory.transmitted + particleHistory.reflected;
+            if (totalParticles > 0) {
+                const actualT = particleHistory.transmitted / totalParticles;
+                transmissionProbDisplay.textContent = (actualT * 100).toFixed(2) + '% (' + particleHistory.transmitted + '/' + totalParticles + ')';
+                reflectionProbDisplay.textContent = ((1 - actualT) * 100).toFixed(2) + '% (' + particleHistory.reflected + '/' + totalParticles + ')';
+            } else {
+                transmissionProbDisplay.textContent = (T * 100).toFixed(2) + '%' + (quantumFluctuations > 0 ? ' ↑' : ' ↓');
+                reflectionProbDisplay.textContent = ((1 - T) * 100).toFixed(2) + '%' + (quantumFluctuations < 0 ? ' ↑' : ' ↓');
+            }
             
             // Classical prediction
             classicalPredDisplay.textContent = E >= V0 ? 'Passes' : 'Blocked';
@@ -456,10 +457,17 @@
                 this.barrierStart = 350;
                 this.barrierEnd = 350 + barrierWidth * 3;
                 
-                // Use theoretical transmission probability
-                this.transmissionProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
+                // Transmission probability with dynamic adaptation
+                const baseProb = calculateTransmissionProbability(energy, barrierHeight, barrierWidth);
                 
-                // Decide fate for quantum particle based on theoretical probability
+                // Apply dynamic probability with fluctuations
+                if (dynamicProbability !== null) {
+                    this.transmissionProb = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
+                } else {
+                    this.transmissionProb = baseProb;
+                }
+                
+                // Decide fate for quantum particle
                 if (this.type === 'quantum') {
                     this.willTunnel = Math.random() < this.transmissionProb;
                 }
@@ -478,20 +486,19 @@
                     this.updateQuantum();
                 }
                 
-                // Fade out when far enough
-                if (this.x > canvas.width - 50 || this.x < 20) {
+                // Fade out when far enough (different boundaries for different particles)
+                const leftBoundary = this.type === 'classical' ? -50 : 20;
+                const rightBoundary = this.type === 'classical' ? canvas.width + 50 : canvas.width - 50;
+                
+                if (this.x > rightBoundary || this.x < leftBoundary) {
                     this.opacity *= 0.95;
                     
                     // Update particle history when particle is about to disappear
                     if (this.opacity < 0.1 && this.type === 'quantum' && !this.counted) {
                         if (this.x > canvas.width - 100) {
-                            // Particle made it to the right side - transmitted
                             particleHistory.transmitted++;
-                            console.log('Particle transmitted! Total:', particleHistory.transmitted);
                         } else if (this.x < 100) {
-                            // Particle went back to the left side - reflected
                             particleHistory.reflected++;
-                            console.log('Particle reflected! Total:', particleHistory.reflected);
                         }
                         this.counted = true;
                         updateDisplay();
@@ -519,6 +526,21 @@
                         this.velocity = -this.velocity;
                     }
                 }
+                
+                // Wall collisions (top and bottom)
+                const particleRadius = 8;
+                if (this.y <= particleRadius) {
+                    this.y = particleRadius;
+                    // Add small random horizontal velocity component on wall bounce
+                    this.velocity += (Math.random() - 0.5) * 20;
+                } else if (this.y >= canvas.height - particleRadius) {
+                    this.y = canvas.height - particleRadius;
+                    // Add small random horizontal velocity component on wall bounce
+                    this.velocity += (Math.random() - 0.5) * 20;
+                }
+                
+                // Apply some friction to prevent infinite bouncing
+                this.velocity *= 0.999;
                 
                 this.x += this.velocity * 0.1;
             }

@@ -433,6 +433,9 @@
                 <div class="control-group">
                     <button id="toggleFields">Toggle Energy Fields</button>
                 </div>
+                <div class="control-group">
+                    <button id="resetStats">Reset Stats</button>
+                </div>
             </div>
             
             <div class="legend">
@@ -578,6 +581,7 @@
         let showEnergyFields = true;
         let mode = 'basic';
         let simulationSpeed = 1.0;
+        let bestSuccessRate = 0;
         
         // Control elements
         const controls = {
@@ -636,6 +640,7 @@
         document.getElementById('clearParticles').addEventListener('click', clearAllParticles);
         document.getElementById('resetSimulation').addEventListener('click', resetAllSettings);
         document.getElementById('toggleFields').addEventListener('click', toggleEnergyFields);
+        document.getElementById('resetStats').addEventListener('click', resetStats);
         
         function setMode(newMode) {
             mode = newMode;
@@ -731,6 +736,12 @@
             const totalParticles = particleHistory.transmitted + particleHistory.reflected;
             const successRate = totalParticles > 0 ? (particleHistory.transmitted / totalParticles * 100) : 0;
             displays.successRate.textContent = successRate.toFixed(2) + '%';
+            
+            // Update best success rate
+            if (successRate > bestSuccessRate) {
+                bestSuccessRate = successRate;
+                displays.bestRate.textContent = bestSuccessRate.toFixed(2) + '%';
+            }
         }
         
         function calculateEnhancedTransmissionProbability(E, V0, width, temp, mass, coherence, magneticField = 0, electricField = 0) {
@@ -888,19 +899,19 @@
                     this.updateQuantum();
                 }
                 
-                // Enhanced fading
-                if (this.x > canvas.width - 50 || this.x < 20) {
+                // Enhanced fading with fixed despawn boundaries
+                if (this.x > canvas.width + 50 || this.x < -50) {
                     this.opacity *= 0.93;
                     
                     if (this.opacity < 0.1 && !this.counted) {
-                        // Position-based counting: transmitted if x > canvas.width - 100, reflected if x < 100
-                        if (this.x > canvas.width - 100) {
+                        // Position-based counting: transmitted if x > canvas.width + 25, reflected if x < -25
+                        if (this.x > canvas.width + 25) {
                             particleHistory.transmitted++;
-                            console.log('Particle transmitted! Total:', particleHistory.transmitted);
+                            console.log(`${this.type} particle transmitted at x=${this.x.toFixed(1)}! Total transmitted: ${particleHistory.transmitted}`);
                             this.counted = true;
-                        } else if (this.x < 100) {
+                        } else if (this.x < -25) {
                             particleHistory.reflected++;
-                            console.log('Particle reflected! Total:', particleHistory.reflected);
+                            console.log(`${this.type} particle reflected at x=${this.x.toFixed(1)}! Total reflected: ${particleHistory.reflected}`);
                             this.counted = true;
                         }
                     }
@@ -924,6 +935,26 @@
                 
                 // Electric field acceleration
                 const electricAcceleration = 1 + electricField * 0.3;
+                
+                // Wall collision detection with particle radius of 8
+                const particleRadius = 8;
+                const topWall = particleRadius;
+                const bottomWall = canvas.height - particleRadius;
+                
+                if (this.y <= topWall || this.y >= bottomWall) {
+                    // Bounce off walls
+                    if (this.y <= topWall) {
+                        this.y = topWall;
+                    } else {
+                        this.y = bottomWall;
+                    }
+                    
+                    // Add small random horizontal velocity component on wall bounce
+                    this.velocity += (Math.random() - 0.5) * 20;
+                }
+                
+                // Apply friction to prevent infinite bouncing
+                this.velocity *= 0.999;
                 
                 // Check for collisions with other classical particles
                 const collisionRadius = 20;
@@ -980,8 +1011,8 @@
                 
                 this.x += nextVelocity;
                 
-                // Keep particle in bounds
-                this.y = Math.max(50, Math.min(canvas.height - 50, this.y));
+                // Keep particle in bounds with particle radius
+                this.y = Math.max(particleRadius, Math.min(canvas.height - particleRadius, this.y));
             }
             
             updateQuantum() {
@@ -1179,6 +1210,7 @@
             particleHistory = { transmitted: 0, reflected: 0 };
             probabilityHistory = [];
             dynamicProbability = null;
+            bestSuccessRate = 0;
             updateDisplay();
         }
         
@@ -1218,6 +1250,30 @@
             }
             
             // Update all displays
+            updateDisplay();
+        }
+        
+        function resetStats() {
+            // Reset only the particle statistics
+            particleHistory = { transmitted: 0, reflected: 0 };
+            probabilityHistory = [];
+            dynamicProbability = null;
+            bestSuccessRate = 0;
+            
+            // Show reset confirmation
+            const challengeStatus = document.getElementById('challengeStatus');
+            if (challengeStatus) {
+                challengeStatus.textContent = 'Statistics reset!';
+                challengeStatus.style.color = '#4caf50';
+                
+                // Revert to challenge text after 2 seconds
+                setTimeout(() => {
+                    challengeStatus.textContent = 'Try to get particles through!';
+                    challengeStatus.style.color = '#64b5f6';
+                }, 2000);
+            }
+            
+            // Update displays
             updateDisplay();
         }
         
