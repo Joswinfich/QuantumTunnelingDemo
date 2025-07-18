@@ -484,10 +484,14 @@
                     
                     // Update particle history when particle is about to disappear
                     if (this.opacity < 0.1 && this.type === 'quantum' && !this.counted) {
-                        if (this.tunneled || this.x > canvas.width - 50) {
+                        if (this.x > canvas.width - 100) {
+                            // Particle made it to the right side - transmitted
                             particleHistory.transmitted++;
-                        } else if (this.reflected || this.x < 20) {
+                            console.log('Particle transmitted! Total:', particleHistory.transmitted);
+                        } else if (this.x < 100) {
+                            // Particle went back to the left side - reflected
                             particleHistory.reflected++;
+                            console.log('Particle reflected! Total:', particleHistory.reflected);
                         }
                         this.counted = true;
                         updateDisplay();

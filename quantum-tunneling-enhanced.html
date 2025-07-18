@@ -892,13 +892,17 @@
                 if (this.x > canvas.width - 50 || this.x < 20) {
                     this.opacity *= 0.93;
                     
-                    if (this.opacity < 0.1 && this.type === 'quantum' && !this.counted) {
-                        if (this.tunneled || this.x > canvas.width - 50) {
+                    if (this.opacity < 0.1 && !this.counted) {
+                        // Position-based counting: transmitted if x > canvas.width - 100, reflected if x < 100
+                        if (this.x > canvas.width - 100) {
                             particleHistory.transmitted++;
-                        } else if (this.reflected || this.x < 20) {
+                            console.log('Particle transmitted! Total:', particleHistory.transmitted);
+                            this.counted = true;
+                        } else if (this.x < 100) {
                             particleHistory.reflected++;
+                            console.log('Particle reflected! Total:', particleHistory.reflected);
+                            this.counted = true;
                         }
-                        this.counted = true;
                     }
                 }
                 
