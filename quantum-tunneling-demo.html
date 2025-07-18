@@ -507,23 +507,21 @@
             }
             
             updateClassical() {
-                // Check if particle is at or past the barrier
+                // Check if particle is at or past the barrier - ALWAYS bounce off
                 if (!this.reflected && this.x >= this.barrierStart - 10) {
-                    if (this.energy < this.barrierHeight) {
-                        // Classical particle cannot pass through - must reflect
-                        this.reflected = true;
-                        this.velocity = -this.velocity;
-                        // Ensure particle doesn't penetrate the barrier
-                        this.x = this.barrierStart - 10;
-                    }
+                    // Classical particles NEVER pass through barriers
+                    this.reflected = true;
+                    this.velocity = -Math.abs(this.velocity); // Ensure velocity is negative (bounce back)
+                    // Ensure particle doesn't penetrate the barrier
+                    this.x = this.barrierStart - 10;
                 }
                 
-                // Prevent classical particle from entering barrier if energy is too low
-                if (this.energy < this.barrierHeight && !this.reflected) {
+                // Prevent classical particle from EVER entering barrier
+                if (!this.reflected) {
                     if (this.x + this.velocity * 0.1 >= this.barrierStart) {
                         this.x = this.barrierStart - 10;
                         this.reflected = true;
-                        this.velocity = -this.velocity;
+                        this.velocity = -Math.abs(this.velocity);
                     }
                 }
                 
