@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Tunneling - Ultimate Interactive Demo</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #16213e 100%);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #64b5f6;
+            margin-bottom: 10px;
+            font-size: 3em;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(100, 181, 246, 0.5); }
+            to { text-shadow: 0 0 30px rgba(100, 181, 246, 0.8), 0 0 40px rgba(100, 181, 246, 0.6); }
+        }
+        
+        .intro {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #b0b0b0;
+            font-size: 1.2em;
+        }
+        
+        .demo-container {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 2px 8px rgba(255,255,255,0.1);
+            border: 1px solid rgba(100, 181, 246, 0.2);
+        }
+        
+        canvas {
+            width: 100%;
+            background: radial-gradient(ellipse at center, #001122 0%, #000000 100%);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 50px rgba(0, 100, 200, 0.2);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .control-group:hover {
+            border-color: rgba(100, 181, 246, 0.6);
+            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #64b5f6;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #333, #64b5f6);
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #64b5f6;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+        }
+        
+        .value-display {
+            text-align: right;
+            font-size: 12px;
+            color: #90caf9;
+            font-weight: bold;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #1976d2, #42a5f5);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #1565c0, #2196f3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .info-panel {
+            background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: linear-gradient(145deg, #3a3a3a, #4a4a4a);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(100, 181, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            border-color: rgba(100, 181, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #90caf9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #64b5f6;
+            text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 4px;
+            border-radius: 2px;
+            box-shadow: 0 0 8px currentColor;
+        }
+        
+        .explanation-section {
+            background: linear-gradient(145deg, #263238, #37474f);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+        }
+        
+        .explanation-section h2 {
+            color: #64b5f6;
+            margin-top: 0;
+            font-size: 2em;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(100, 181, 246, 0.5);
+        }
+        
+        .explanation-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        .explanation-card {
+            background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 181, 246, 0.2);
+        }
+        
+        .explanation-card h3 {
+            color: #64b5f6;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        
+        .explanation-card p {
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(100, 181, 246, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.5);
+            border-radius: 6px;
+            color: #64b5f6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        .mode-btn.active {
+            background: rgba(100, 181, 246, 0.4);
+            color: white;
+        }
+        
+        .advanced-controls {
+            display: none;
+        }
+        
+        .advanced-controls.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .expert-controls {
+            display: none;
+        }
+        
+        .expert-controls.active {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="demo-container">
+            <canvas id="tunnelingCanvas" width="1000" height="500"></canvas>
+            
+            <div class="mode-selector">
+                <div class="mode-btn active" onclick="setMode('basic')">Basic Mode</div>
+                <div class="mode-btn" onclick="setMode('advanced')">Advanced Mode</div>
+                <div class="mode-btn" onclick="setMode('expert')">Expert Mode</div>
+            </div>
+            
+            <div class="controls" id="basicControls">
+                <div class="control-group">
+                    <label for="barrierHeight">Barrier Height (V₀)</label>
+                    <input type="range" id="barrierHeight" min="1.0" max="2.0" step="0.02" value="1.5">
+                    <div class="value-display" id="barrierHeightValue">1.5 eV</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="particleEnergy">Particle Energy (E)</label>
+                    <input type="range" id="particleEnergy" min="0.5" max="1.6" step="0.02" value="0.9">
+                    <div class="value-display" id="particleEnergyValue">0.9 eV</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="barrierWidth">Barrier Width</label>
+                    <input type="range" id="barrierWidth" min="10" max="30" step="1" value="20">
+                    <div class="value-display" id="barrierWidthValue">20 nm</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="temperature">Temperature</label>
+                    <input type="range" id="temperature" min="200" max="600" step="10" value="350">
+                    <div class="value-display" id="temperatureValue">350 K</div>
+                </div>
+            </div>
+            
+            <div class="advanced-controls" id="advancedControls">
+                <div class="control-group">
+                    <label for="particleMass">Particle Mass</label>
+                    <input type="range" id="particleMass" min="0.1" max="5.0" step="0.1" value="1.0">
+                    <div class="value-display" id="particleMassValue">1.0 mₑ</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="magneticField">Magnetic Field</label>
+                    <input type="range" id="magneticField" min="0" max="2.0" step="0.1" value="0.4">
+                    <div class="value-display" id="magneticFieldValue">0.4 T</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="quantumCoherence">Quantum Coherence</label>
+                    <input type="range" id="quantumCoherence" min="0.1" max="1.0" step="0.1" value="0.8">
+                    <div class="value-display" id="quantumCoherenceValue">80%</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="electricField">Electric Field</label>
+                    <input type="range" id="electricField" min="0" max="1.0" step="0.05" value="0.3">
+                    <div class="value-display" id="electricFieldValue">0.3 V/nm</div>
+                </div>
+            </div>
+            
+            <div class="expert-controls" id="expertControls">
+                <div class="control-group">
+                    <label for="wavepacketWidth">Wave Packet Width</label>
+                    <input type="range" id="wavepacketWidth" min="5" max="50" step="5" value="20">
+                    <div class="value-display" id="wavepacketWidthValue">20 nm</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="phaseShift">Phase Shift</label>
+                    <input type="range" id="phaseShift" min="0" max="6.28" step="0.1" value="0">
+                    <div class="value-display" id="phaseShiftValue">0.0 rad</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="momentumSpread">Momentum Spread</label>
+                    <input type="range" id="momentumSpread" min="0.1" max="2.0" step="0.1" value="0.5">
+                    <div class="value-display" id="momentumSpreadValue">0.5 units</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="decoherenceRate">Decoherence Rate</label>
+                    <input type="range" id="decoherenceRate" min="0" max="0.1" step="0.01" value="0.02">
+                    <div class="value-display" id="decoherenceRateValue">0.02 /frame</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="barrierShape">Barrier Shape</label>
+                    <input type="range" id="barrierShape" min="0.5" max="3.0" step="0.1" value="1.0">
+                    <div class="value-display" id="barrierShapeValue">1.0 (rectangular)</div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="tunnelCorrection">Quantum Correction</label>
+                    <input type="range" id="tunnelCorrection" min="0.5" max="1.5" step="0.05" value="1.0">
+                    <div class="value-display" id="tunnelCorrectionValue">1.0x</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="simulationSpeed">Simulation Speed</label>
+                    <input type="range" id="simulationSpeed" min="0.1" max="3.0" step="0.1" value="1.0">
+                    <div class="value-display" id="simulationSpeedValue">1.0x</div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="fireParticle">Fire Quantum Particle</button>
+                </div>
+                <div class="control-group">
+                    <button id="fireBurst">Particle Burst (×10)</button>
+                </div>
+                <div class="control-group">
+                    <button id="clearParticles">Clear All</button>
+                </div>
+                <div class="control-group">
+                    <button id="resetSimulation">Reset All Settings</button>
+                </div>
+                <div class="control-group">
+                    <button id="toggleFields">Toggle Energy Fields</button>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff6b6b; color: #ff6b6b;"></div>
+                    <span>Classical Particle</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4ecdc4; color: #4ecdc4;"></div>
+                    <span>Quantum Wave Function</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffe66d; color: #ffe66d;"></div>
+                    <span>Probability Density</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #a8e6cf; color: #a8e6cf;"></div>
+                    <span>Energy Field</span>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Transmission Probability</div>
+                        <div class="stat-value" id="transmissionProb">0.00%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Reflection Probability</div>
+                        <div class="stat-value" id="reflectionProb">100.00%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Classical Prediction</div>
+                        <div class="stat-value" id="classicalPred">Blocked</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">De Broglie Wavelength</div>
+                        <div class="stat-value" id="wavelength">0.00 nm</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Particles Transmitted</div>
+                        <div class="stat-value" id="particlesTransmitted">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Particles Reflected</div>
+                        <div class="stat-value" id="particlesReflected">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Quantum Fluctuation</div>
+                        <div class="stat-value" id="fluctuation">0.00%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value" id="successRate">0.00%</div>
+                    </div>
+                </div>
+                <div class="stats" style="margin-top: 15px;">
+                    <div class="stat-item">
+                        <div class="stat-label">Challenge Status</div>
+                        <div class="stat-value" id="challengeStatus">Try to get particles through!</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Best Success Rate</div>
+                        <div class="stat-value" id="bestRate">0.00%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation-section">
+            <h2>Understanding Quantum Tunneling</h2>
+            
+            <div class="explanation-content">
+                <div class="explanation-card">
+                    <h3>What is Quantum Tunneling?</h3>
+                    <p>Quantum tunneling is a quantum mechanical phenomenon where particles can pass through potential barriers even when they don't have enough energy to go over them classically. This happens because in quantum mechanics, particles behave like waves and can "tunnel" through barriers.</p>
+                    <p>Imagine throwing a ball at a wall - classically, if the ball doesn't have enough energy, it bounces back. But quantum particles can mysteriously appear on the other side of the wall!</p>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>The Physics Behind It</h3>
+                    <p>According to the Schrödinger equation, particles are described by wave functions (ψ) that extend throughout space. When a wave encounters a barrier:</p>
+                    <p><strong>Inside the barrier:</strong> The wave decays exponentially but doesn't immediately go to zero.</p>
+                    <p><strong>Beyond the barrier:</strong> If the barrier is thin enough, some wave amplitude remains, giving a probability of finding the particle there.</p>
+                    <p>The transmission probability follows: T ≈ e^(-2κa) where κ = √(2m(V₀-E))/ℏ and 'a' is the barrier width.</p>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>Key Factors</h3>
+                    <p><strong>Barrier Height (V₀):</strong> Higher barriers make tunneling less likely.</p>
+                    <p><strong>Barrier Width:</strong> Thicker barriers exponentially reduce tunneling probability.</p>
+                    <p><strong>Particle Energy (E):</strong> Higher energy particles tunnel more easily.</p>
+                    <p><strong>Particle Mass:</strong> Lighter particles (like electrons) tunnel better than heavy ones.</p>
+                    <p><strong>Temperature:</strong> Affects the energy distribution of particles.</p>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>Real-World Applications</h3>
+                    <p><strong>Computer Technology:</strong> Flash memory and tunnel diodes rely on controlled tunneling.</p>
+                    <p><strong>Nuclear Physics:</strong> Alpha decay in radioactive materials occurs through tunneling.</p>
+                    <p><strong>Scanning Tunneling Microscopy:</strong> Allows us to "see" individual atoms by measuring tunneling current.</p>
+                    <p><strong>Quantum Computing:</strong> Josephson junctions use tunneling for quantum bits (qubits).</p>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>Mind-Bending Facts</h3>
+                    <p><strong>Instantaneous:</strong> Tunneling appears to happen faster than light, but no information is transmitted.</p>
+                    <p><strong>Probabilistic:</strong> We can only predict the probability, not when a specific particle will tunnel.</p>
+                    <p><strong>Universal:</strong> All quantum particles can tunnel, from electrons to entire atoms.</p>
+                    <p><strong>Essential for Life:</strong> Nuclear fusion in stars (including our Sun) relies on quantum tunneling!</p>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>Using This Demo</h3>
+                    <p><strong>Basic Mode:</strong> Adjust fundamental parameters and observe how they affect tunneling probability.</p>
+                    <p><strong>Advanced Mode:</strong> Control additional quantum properties like coherence and electromagnetic fields.</p>
+                    <p><strong>Expert Mode:</strong> Fine-tune wave packet properties and phase relationships.</p>
+                    <p><strong>Watch the Patterns:</strong> Notice how the probability fluctuates due to quantum uncertainty and how the system "learns" from particle history.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tunnelingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Physics constants (scaled for visualization)
+        const h = 6.626e-34;
+        const m = 9.109e-31;
+        const eV = 1.602e-19;
+        const k_B = 1.381e-23;
+        
+        // Simulation variables
+        let particles = [];
+        let energyField = [];
+        let animationId = null;
+        let time = 0;
+        let particleHistory = { transmitted: 0, reflected: 0 };
+        let quantumFluctuations = 0;
+        let dynamicProbability = null;
+        let probabilityHistory = [];
+        let showEnergyFields = true;
+        let mode = 'basic';
+        let simulationSpeed = 1.0;
+        
+        // Control elements
+        const controls = {
+            barrierHeight: document.getElementById('barrierHeight'),
+            particleEnergy: document.getElementById('particleEnergy'),
+            barrierWidth: document.getElementById('barrierWidth'),
+            temperature: document.getElementById('temperature'),
+            particleMass: document.getElementById('particleMass'),
+            magneticField: document.getElementById('magneticField'),
+            quantumCoherence: document.getElementById('quantumCoherence'),
+            electricField: document.getElementById('electricField'),
+            wavepacketWidth: document.getElementById('wavepacketWidth'),
+            phaseShift: document.getElementById('phaseShift'),
+            momentumSpread: document.getElementById('momentumSpread'),
+            decoherenceRate: document.getElementById('decoherenceRate'),
+            simulationSpeed: document.getElementById('simulationSpeed')
+        };
+        
+        // Display elements
+        const displays = {
+            barrierHeight: document.getElementById('barrierHeightValue'),
+            particleEnergy: document.getElementById('particleEnergyValue'),
+            barrierWidth: document.getElementById('barrierWidthValue'),
+            temperature: document.getElementById('temperatureValue'),
+            particleMass: document.getElementById('particleMassValue'),
+            magneticField: document.getElementById('magneticFieldValue'),
+            quantumCoherence: document.getElementById('quantumCoherenceValue'),
+            electricField: document.getElementById('electricFieldValue'),
+            wavepacketWidth: document.getElementById('wavepacketWidthValue'),
+            phaseShift: document.getElementById('phaseShiftValue'),
+            transmissionProb: document.getElementById('transmissionProb'),
+            reflectionProb: document.getElementById('reflectionProb'),
+            classicalPred: document.getElementById('classicalPred'),
+            wavelength: document.getElementById('wavelength'),
+            particlesTransmitted: document.getElementById('particlesTransmitted'),
+            particlesReflected: document.getElementById('particlesReflected'),
+            fluctuation: document.getElementById('fluctuation'),
+            successRate: document.getElementById('successRate'),
+            challengeStatus: document.getElementById('challengeStatus'),
+            bestRate: document.getElementById('bestRate'),
+            momentumSpread: document.getElementById('momentumSpreadValue'),
+            decoherence: document.getElementById('decoherenceRateValue'),
+            simulationSpeed: document.getElementById('simulationSpeedValue')
+        };
+        
+        // Event listeners
+        Object.keys(controls).forEach(key => {
+            if (controls[key]) {
+                controls[key].addEventListener('input', updateDisplay);
+            }
+        });
+        
+        document.getElementById('fireParticle').addEventListener('click', () => fireParticles(1));
+        document.getElementById('fireBurst').addEventListener('click', () => fireParticles(10));
+        document.getElementById('clearParticles').addEventListener('click', clearAllParticles);
+        document.getElementById('resetSimulation').addEventListener('click', resetAllSettings);
+        document.getElementById('toggleFields').addEventListener('click', toggleEnergyFields);
+        
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const advancedControls = document.getElementById('advancedControls');
+            const expertControls = document.getElementById('expertControls');
+            
+            // Hide all controls first
+            advancedControls.classList.remove('active');
+            expertControls.classList.remove('active');
+            
+            // Show appropriate controls based on mode
+            if (newMode === 'advanced' || newMode === 'expert') {
+                advancedControls.classList.add('active');
+            }
+            
+            if (newMode === 'expert') {
+                expertControls.classList.add('active');
+            }
+        }
+        
+        function updateDisplay() {
+            const V0 = parseFloat(controls.barrierHeight.value);
+            const E = parseFloat(controls.particleEnergy.value);
+            const width = parseFloat(controls.barrierWidth.value);
+            const temp = parseFloat(controls.temperature.value);
+            const mass = controls.particleMass ? parseFloat(controls.particleMass.value) : 1.0;
+            const coherence = controls.quantumCoherence ? parseFloat(controls.quantumCoherence.value) : 0.8;
+            
+            // Update displays
+            displays.barrierHeight.textContent = V0.toFixed(1) + ' eV';
+            displays.particleEnergy.textContent = E.toFixed(1) + ' eV';
+            displays.barrierWidth.textContent = width + ' nm';
+            displays.temperature.textContent = temp + ' K';
+            
+            if (displays.particleMass) displays.particleMass.textContent = mass.toFixed(1) + ' mₑ';
+            if (displays.quantumCoherence) displays.quantumCoherence.textContent = (coherence * 100).toFixed(0) + '%';
+            if (displays.magneticField) displays.magneticField.textContent = parseFloat(controls.magneticField.value).toFixed(1) + ' T';
+            if (displays.electricField) displays.electricField.textContent = parseFloat(controls.electricField.value).toFixed(2) + ' V/nm';
+            if (displays.wavepacketWidth) displays.wavepacketWidth.textContent = parseFloat(controls.wavepacketWidth.value) + ' nm';
+            if (displays.phaseShift) displays.phaseShift.textContent = parseFloat(controls.phaseShift.value).toFixed(1) + ' rad';
+            if (controls.momentumSpread && displays.momentumSpread) displays.momentumSpread.textContent = parseFloat(controls.momentumSpread.value).toFixed(1) + ' units';
+            if (controls.decoherenceRate && displays.decoherence) displays.decoherence.textContent = parseFloat(controls.decoherenceRate.value).toFixed(2) + ' /frame';
+            
+            // Update simulation speed
+            simulationSpeed = parseFloat(controls.simulationSpeed.value);
+            if (displays.simulationSpeed) displays.simulationSpeed.textContent = simulationSpeed.toFixed(1) + 'x';
+            
+            // Calculate base transmission probability with enhanced physics
+            const baseT = calculateEnhancedTransmissionProbability(E, V0, width, temp, mass, coherence);
+            
+            // Gentle quantum fluctuations for smooth variation
+            const thermalFluctuation = Math.sin(time * 0.005) * 0.01;
+            const quantumNoise = Math.sin(time * 0.008 + Math.PI/3) * 0.008;
+            const coherentOscillation = Math.sin(time * 0.012 + Math.PI/2) * 0.005;
+            
+            quantumFluctuations = (thermalFluctuation + quantumNoise + coherentOscillation) * coherence;
+            
+            // Dynamic adaptation with memory
+            if (dynamicProbability === null) {
+                dynamicProbability = baseT;
+            } else {
+                const totalParticles = particleHistory.transmitted + particleHistory.reflected;
+                const historyFactor = totalParticles > 0 ? particleHistory.transmitted / totalParticles : 0.5;
+                const adaptationRate = 0.1 + 0.2 * coherence;
+                dynamicProbability = baseT * (1 - adaptationRate) + historyFactor * adaptationRate;
+            }
+            
+            // Final probability with bounds
+            const T = Math.max(0, Math.min(1, dynamicProbability + quantumFluctuations));
+            
+            // Update probability history
+            probabilityHistory.push(T);
+            if (probabilityHistory.length > 150) probabilityHistory.shift();
+            
+            // Update displays with enhanced formatting
+            const fluctIcon = quantumFluctuations > 0.002 ? ' ↗' : quantumFluctuations < -0.002 ? ' ↘' : ' ~';
+            displays.transmissionProb.textContent = (T * 100).toFixed(1) + '%' + fluctIcon;
+            displays.reflectionProb.textContent = ((1 - T) * 100).toFixed(1) + '%';
+            displays.classicalPred.textContent = E >= V0 ? 'Passes' : 'Blocked';
+            
+            // Enhanced wavelength calculation
+            const lambda = calculateEnhancedWavelength(E, temp, mass);
+            displays.wavelength.textContent = lambda.toFixed(2) + ' nm';
+            
+            // Update statistics
+            displays.particlesTransmitted.textContent = particleHistory.transmitted;
+            displays.particlesReflected.textContent = particleHistory.reflected;
+            displays.fluctuation.textContent = (quantumFluctuations * 100).toFixed(2) + '%';
+            
+            const totalParticles = particleHistory.transmitted + particleHistory.reflected;
+            const successRate = totalParticles > 0 ? (particleHistory.transmitted / totalParticles * 100) : 0;
+            displays.successRate.textContent = successRate.toFixed(2) + '%';
+        }
+        
+        function calculateEnhancedTransmissionProbability(E, V0, width, temp, mass, coherence, magneticField = 0, electricField = 0) {
+            // Create smooth gradual transmission probability with all field interactions
+            const energyRatio = E / V0;
+            
+            // Base calculation for gradual transmission
+            let transmission;
+            
+            if (energyRatio >= 1.0) {
+                // Above barrier - high but not 100% due to quantum reflection
+                transmission = 0.75 + 0.2 * Math.exp(-(energyRatio - 1.0) * 3);
+            } else {
+                // Below barrier - exponential tunneling with sweet spots
+                const widthFactor = Math.exp(-width / 25); // Thinner = easier tunneling
+                const energyFactor = Math.pow(energyRatio, 2.5); // Higher energy = easier
+                
+                // Create gradual probability curve
+                transmission = energyFactor * widthFactor * 0.8;
+                
+                // Add sweet spots for interesting gameplay
+                if (energyRatio > 0.4 && energyRatio < 0.9) {
+                    const sweetSpot = Math.sin((energyRatio - 0.4) * Math.PI / 0.5);
+                    transmission += sweetSpot * 0.3 * widthFactor;
+                }
+            }
+            
+            // Temperature effects - thermal energy helps tunneling
+            const tempBonus = (temp - 300) / 1500; // 0 to ~0.2 boost at 600K
+            transmission += tempBonus;
+            
+            // Mass effects - lighter particles tunnel much better
+            const massEffect = Math.pow(2.0 / mass, 0.5);
+            transmission *= massEffect;
+            
+            // Coherence effects - high coherence improves tunneling
+            transmission *= Math.pow(coherence, 0.3);
+            
+            // Electric field enhancement - electric field lowers effective barrier
+            const electricBonus = electricField * 0.15; // Strong effect
+            transmission += electricBonus;
+            
+            // Magnetic field effects - can help or hinder depending on orientation
+            const magneticEffect = magneticField * 0.05 * Math.sin(time * 0.1); // Oscillating effect
+            transmission += magneticEffect;
+            
+            // Wave packet width effects (expert mode)
+            if (controls.wavepacketWidth) {
+                const waveWidth = parseFloat(controls.wavepacketWidth.value);
+                const widthEffect = Math.exp(-Math.abs(waveWidth - width) / 15); // Resonance effect
+                transmission *= (0.8 + 0.4 * widthEffect);
+            }
+            
+            // Momentum spread effects (expert mode)
+            if (controls.momentumSpread) {
+                const momentum = parseFloat(controls.momentumSpread.value);
+                transmission *= (0.9 + momentum * 0.1); // Higher momentum spread helps
+            }
+            
+            // Phase shift effects (expert mode)
+            if (controls.phaseShift) {
+                const phase = parseFloat(controls.phaseShift.value);
+                const phaseEffect = 0.05 * Math.sin(phase); // Small oscillating effect
+                transmission += phaseEffect;
+            }
+            
+            // Decoherence reduces tunneling efficiency
+            if (controls.decoherenceRate) {
+                const decoherence = parseFloat(controls.decoherenceRate.value);
+                transmission *= Math.exp(-decoherence * 5); // Exponential reduction
+            }
+            
+            // Small random fluctuations for quantum uncertainty
+            const fluctuation = 0.015 * (Math.random() - 0.5);
+            transmission += fluctuation;
+            
+            // Ensure realistic bounds with gradual scaling
+            return Math.max(0.001, Math.min(0.92, transmission));
+        }
+        
+        function calculateEnhancedWavelength(E, temp, mass) {
+            const thermalEnergy = k_B * temp / eV;
+            const effectiveE = E + thermalEnergy;
+            const momentum = Math.sqrt(2 * mass * m * effectiveE * eV);
+            const lambda = h / momentum;
+            return lambda * 1e9;
+        }
+        
+        class EnhancedParticle {
+            constructor(type, energy, barrierHeight, barrierWidth) {
+                this.type = type;
+                this.x = 50;
+                this.y = canvas.height / 2 + (Math.random() - 0.5) * 50;
+                this.energy = energy;
+                this.barrierHeight = barrierHeight;
+                this.barrierWidth = barrierWidth;
+                this.velocity = Math.sqrt(energy) * 60;
+                this.waveAmplitude = 0;
+                this.tunneled = false;
+                this.reflected = false;
+                this.opacity = 1;
+                this.trail = [];
+                this.counted = false;
+                this.phase = Math.random() * Math.PI * 2;
+                this.coherence = controls.quantumCoherence ? parseFloat(controls.quantumCoherence.value) : 0.8;
+                this.mass = controls.particleMass ? parseFloat(controls.particleMass.value) : 1.0;
+                
+                // Enhanced barrier properties
+                this.barrierStart = 400;
+                this.barrierEnd = 400 + barrierWidth * 4;
+                
+                // Get all current control values for dynamic probability calculation
+                const temp = parseFloat(controls.temperature.value);
+                const magneticField = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
+                const electricField = controls.electricField ? parseFloat(controls.electricField.value) : 0;
+                
+                // Calculate transmission probability with all field effects
+                this.transmissionProb = calculateEnhancedTransmissionProbability(
+                    energy, barrierHeight, barrierWidth, temp, this.mass, this.coherence, magneticField, electricField
+                );
+                
+                // Quantum decision - each particle rolls the dice!
+                if (this.type === 'quantum') {
+                    // Small individual variation per particle
+                    const variation = 0.03 * (Math.random() - 0.5);
+                    const actualProb = Math.max(0, Math.min(1, this.transmissionProb + variation));
+                    this.willTunnel = Math.random() < actualProb;
+                    this.actualTransmissionProb = actualProb;
+                } else {
+                    this.actualTransmissionProb = 0;
+                }
+                
+                // Visual properties
+                this.hue = type === 'classical' ? 0 : 180;
+                this.saturation = 80;
+                this.lightness = 60;
+            }
+            
+            update() {
+                // Enhanced trail with physics
+                this.trail.push({ 
+                    x: this.x, 
+                    y: this.y, 
+                    opacity: this.opacity,
+                    phase: this.phase,
+                    amplitude: this.waveAmplitude 
+                });
+                if (this.trail.length > 50) {
+                    this.trail.shift();
+                }
+                
+                if (this.type === 'classical') {
+                    this.updateClassical();
+                } else {
+                    this.updateQuantum();
+                }
+                
+                // Enhanced fading
+                if (this.x > canvas.width - 50 || this.x < 20) {
+                    this.opacity *= 0.93;
+                    
+                    if (this.opacity < 0.1 && this.type === 'quantum' && !this.counted) {
+                        if (this.tunneled || this.x > canvas.width - 50) {
+                            particleHistory.transmitted++;
+                        } else if (this.reflected || this.x < 20) {
+                            particleHistory.reflected++;
+                        }
+                        this.counted = true;
+                    }
+                }
+                
+                this.phase += 0.2;
+            }
+            
+            updateClassical() {
+                // Get current field values for classical particle effects
+                const magneticField = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
+                const electricField = controls.electricField ? parseFloat(controls.electricField.value) : 0;
+                const temp = parseFloat(controls.temperature.value);
+                
+                // Temperature effects on classical motion (thermal velocity)
+                const thermalBoost = 1 + (temp - 300) / 2000;
+                
+                // Magnetic field deflection (Lorentz force)
+                const magneticDeflection = magneticField * Math.sin(this.x * 0.01 + time * 0.05) * 1.5;
+                this.y += magneticDeflection;
+                
+                // Electric field acceleration
+                const electricAcceleration = 1 + electricField * 0.3;
+                
+                // Classical barrier interaction
+                if (!this.reflected && this.x >= this.barrierStart - 15) {
+                    if (this.energy < this.barrierHeight) {
+                        this.reflected = true;
+                        this.velocity = -this.velocity * thermalBoost;
+                    } else {
+                        // Can pass over barrier - apply field effects
+                        this.velocity *= electricAcceleration;
+                    }
+                }
+                
+                // Apply mass effects to velocity
+                const massSpeedFactor = 2.0 / this.mass;
+                this.x += this.velocity * 0.08 * massSpeedFactor * thermalBoost * electricAcceleration * simulationSpeed;
+                
+                // Keep particle in bounds
+                this.y = Math.max(50, Math.min(canvas.height - 50, this.y));
+            }
+            
+            updateQuantum() {
+                const barrierCenter = (this.barrierStart + this.barrierEnd) / 2;
+                const distToBarrier = Math.abs(this.x - barrierCenter);
+                
+                // Get current advanced control values for dynamic effects
+                const magneticField = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
+                const electricField = controls.electricField ? parseFloat(controls.electricField.value) : 0;
+                const temp = parseFloat(controls.temperature.value);
+                const decoherence = controls.decoherenceRate ? parseFloat(controls.decoherenceRate.value) : 0.02;
+                
+                // Temperature effects on particle motion
+                const thermalVelocityBoost = 1 + (temp - 300) / 1000;
+                
+                // Magnetic field effects (Lorentz force - deflects particle)
+                const magneticDeflection = magneticField * Math.sin(this.x * 0.01 + time * 0.1) * 2;
+                this.y += magneticDeflection;
+                
+                // Electric field effects (accelerates particle)
+                const electricAcceleration = electricField * 0.5;
+                
+                // Decoherence reduces wave amplitude over time
+                this.coherence *= Math.exp(-decoherence * 0.1);
+                
+                // Enhanced wave amplitude calculation with field effects
+                const baseAmplitude = 25 * this.coherence;
+                if (this.x < this.barrierStart) {
+                    this.waveAmplitude = baseAmplitude;
+                } else if (this.x >= this.barrierStart && this.x <= this.barrierEnd) {
+                    if (this.willTunnel) {
+                        // In barrier: exponential decay but enhanced by electric field
+                        const decayFactor = Math.exp(-distToBarrier / (60 * this.coherence));
+                        const fieldEnhancement = 1 + electricField * 0.3;
+                        this.waveAmplitude = baseAmplitude * decayFactor * fieldEnhancement;
+                    } else {
+                        this.waveAmplitude = baseAmplitude * Math.exp(-distToBarrier / 25);
+                    }
+                } else {
+                    // After barrier: MAINTAIN FULL AMPLITUDE (fix for speed issue)
+                    this.waveAmplitude = baseAmplitude;
+                }
+                
+                // Calculate proper velocity based on energy and field effects
+                const baseVelocity = Math.sqrt(this.energy / this.mass) * 60;
+                let currentVelocity = baseVelocity * thermalVelocityBoost;
+                
+                // Enhanced movement with proper quantum mechanics
+                if (!this.reflected && !this.tunneled) {
+                    if (this.x >= this.barrierStart && this.x <= this.barrierEnd) {
+                        if (this.willTunnel) {
+                            // Inside barrier: slower but not zero (tunneling velocity)
+                            const barrierFactor = Math.sqrt(Math.max(0.1, this.energy / this.barrierHeight));
+                            this.velocity = currentVelocity * barrierFactor * (0.3 + electricAcceleration);
+                            
+                            if (this.x >= this.barrierEnd) {
+                                this.tunneled = true;
+                                // CRITICAL FIX: Restore full velocity after tunneling
+                                this.velocity = currentVelocity * (1 + electricAcceleration);
+                            }
+                        } else {
+                            this.reflected = true;
+                            this.velocity = -currentVelocity;
+                        }
+                    } else {
+                        // Outside barrier: apply field effects to velocity
+                        this.velocity = currentVelocity * (1 + electricAcceleration);
+                    }
+                } else if (this.tunneled) {
+                    // IMPORTANT: Maintain proper post-tunneling velocity
+                    this.velocity = currentVelocity * (1 + electricAcceleration);
+                }
+                
+                // Apply velocity with mass effects
+                const massSpeedFactor = 2.0 / this.mass; // Lighter particles move faster
+                this.x += this.velocity * 0.08 * massSpeedFactor * simulationSpeed;
+                
+                // Keep particle in reasonable Y bounds despite magnetic deflection
+                this.y = Math.max(50, Math.min(canvas.height - 50, this.y));
+            }
+            
+            draw(ctx) {
+                if (this.type === 'classical') {
+                    this.drawClassicalEnhanced(ctx);
+                } else {
+                    this.drawQuantumEnhanced(ctx);
+                }
+            }
+            
+            drawClassicalEnhanced(ctx) {
+                // Enhanced trail with glow
+                this.trail.forEach((point, index) => {
+                    const alpha = point.opacity * (index / this.trail.length) * 0.4;
+                    const size = 2 + index * 0.1;
+                    
+                    // Glow effect
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${alpha})`;
+                    
+                    ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                // Enhanced particle with energy aura
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
+                
+                ctx.fillStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness + 20}%, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            }
+            
+            drawQuantumEnhanced(ctx) {
+                // Enhanced wave function with interference
+                ctx.strokeStyle = `hsla(${this.hue}, ${this.saturation}%, ${this.lightness}%, ${this.opacity})`;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = ctx.strokeStyle;
+                
+                ctx.beginPath();
+                for (let dx = -80; dx <= 80; dx += 1) {
+                    const x = this.x + dx;
+                    const localPhase = dx * 0.15 + this.phase;
+                    const envelope = Math.exp(-dx * dx / (1500 * this.coherence));
+                    const interference = 1 + 0.3 * Math.sin(dx * 0.05 + time * 0.02);
+                    const y = this.y + this.waveAmplitude * Math.sin(localPhase) * envelope * interference;
+                    
+                    if (dx === -80) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+                
+                // Enhanced probability density with quantum fluctuations
+                ctx.fillStyle = `hsla(60, 80%, 70%, ${this.opacity * 0.4})`;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = ctx.fillStyle;
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x - 80, this.y);
+                
+                for (let dx = -80; dx <= 80; dx += 2) {
+                    const x = this.x + dx;
+                    const localPhase = dx * 0.15 + this.phase;
+                    const envelope = Math.exp(-dx * dx / (1500 * this.coherence));
+                    const waveValue = this.waveAmplitude * Math.sin(localPhase) * envelope;
+                    const probability = Math.pow(waveValue, 2) / 600;
+                    const fluctuation = 1 + quantumFluctuations * 2;
+                    const y = this.y - probability * 40 * fluctuation;
+                    
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.lineTo(this.x + 80, this.y);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        function fireParticles(count) {
+            const energy = parseFloat(controls.particleEnergy.value);
+            const barrierHeight = parseFloat(controls.barrierHeight.value);
+            const barrierWidth = parseFloat(controls.barrierWidth.value);
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    particles.push(new EnhancedParticle('classical', energy, barrierHeight, barrierWidth));
+                    
+                    setTimeout(() => {
+                        particles.push(new EnhancedParticle('quantum', energy, barrierHeight, barrierWidth));
+                    }, 100);
+                }, i * 200);
+            }
+        }
+        
+        function clearAllParticles() {
+            particles = [];
+            particleHistory = { transmitted: 0, reflected: 0 };
+            probabilityHistory = [];
+            dynamicProbability = null;
+            updateDisplay();
+        }
+        
+        function resetAllSettings() {
+            // Reset all controls to default values
+            controls.barrierHeight.value = 1.5;
+            controls.particleEnergy.value = 0.9;
+            controls.barrierWidth.value = 20;
+            controls.temperature.value = 350;
+            controls.simulationSpeed.value = 1.0;
+            
+            if (controls.particleMass) controls.particleMass.value = 1.0;
+            if (controls.magneticField) controls.magneticField.value = 0.4;
+            if (controls.quantumCoherence) controls.quantumCoherence.value = 0.8;
+            if (controls.electricField) controls.electricField.value = 0.3;
+            
+            if (controls.wavepacketWidth) controls.wavepacketWidth.value = 20;
+            if (controls.phaseShift) controls.phaseShift.value = 0;
+            if (controls.momentumSpread) controls.momentumSpread.value = 0.5;
+            if (controls.decoherenceRate) controls.decoherenceRate.value = 0.02;
+            
+            // Clear simulation state
+            clearAllParticles();
+            
+            // Reset best success rate
+            bestSuccessRate = 0;
+            
+            // Show reset confirmation
+            const challengeStatus = document.getElementById('challengeStatus');
+            if (challengeStatus) {
+                challengeStatus.textContent = 'Settings reset to defaults!';
+                challengeStatus.style.color = '#4caf50';
+                
+                // Revert to challenge text after 2 seconds
+                setTimeout(() => {
+                    challengeStatus.textContent = 'Try to get particles through!';
+                    challengeStatus.style.color = '#64b5f6';
+                }, 2000);
+            }
+            
+            // Update all displays
+            updateDisplay();
+        }
+        
+        function updateModeDisplay() {
+            const statsContainer = document.querySelector('.stats');
+            const allStatItems = document.querySelectorAll('.stat-item');
+            
+            if (mode === 'basic') {
+                // Basic mode: Hide all probability numbers, show only qualitative feedback
+                allStatItems.forEach(item => {
+                    const label = item.querySelector('.stat-label').textContent;
+                    const value = item.querySelector('.stat-value');
+                    
+                    if (label.includes('Transmission') || label.includes('Reflection') || label.includes('Wavelength') || label.includes('Fluctuation')) {
+                        item.style.display = 'none';
+                    } else {
+                        item.style.display = 'block';
+                    }
+                });
+            } else if (mode === 'advanced') {
+                // Advanced mode: Show transmission probability and basic stats
+                allStatItems.forEach(item => {
+                    const label = item.querySelector('.stat-label').textContent;
+                    
+                    if (label.includes('Transmission') || label.includes('Reflection') || label.includes('Classical') || label.includes('Particles') || label.includes('Success') || label.includes('Challenge') || label.includes('Best')) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            } else if (mode === 'expert') {
+                // Expert mode: Show everything
+                allStatItems.forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+        }
+        
+        function toggleEnergyFields() {
+            showEnergyFields = !showEnergyFields;
+        }
+        
+        function drawEnhancedBarrier() {
+            const width = parseFloat(controls.barrierWidth.value) * 4;
+            const height = parseFloat(controls.barrierHeight.value) * 120;
+            const barrierStart = 400;
+            
+            // Always draw field visualizations
+            drawTemperatureField();
+            drawElectricField(barrierStart, width, height);
+            drawMagneticField(barrierStart, width, height);
+            drawCoherenceField(); // Always show coherence effects
+            
+            // Energy field only when toggle is on
+            if (showEnergyFields) {
+                drawEnergyField(barrierStart, width, height);
+            }
+            
+            // Enhanced barrier with gradient
+            const gradient = ctx.createLinearGradient(barrierStart, 0, barrierStart + width, 0);
+            gradient.addColorStop(0, 'rgba(120, 120, 120, 0.9)');
+            gradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.95)');
+            gradient.addColorStop(1, 'rgba(120, 120, 120, 0.9)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(barrierStart, canvas.height / 2 - height / 2, width, height);
+            
+            // Barrier glow effect
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'rgba(100, 181, 246, 0.3)';
+            ctx.strokeStyle = 'rgba(100, 181, 246, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(barrierStart, canvas.height / 2 - height / 2, width, height);
+            ctx.shadowBlur = 0;
+            
+            // Enhanced energy level visualization
+            drawEnergyLevels();
+            
+            // Quantum field fluctuations around barrier
+            drawQuantumFluctuations(barrierStart, width, height);
+            
+            // Advanced visualizations for expert mode
+            if (mode === 'expert') {
+                drawWavePacketVisualization(barrierStart, width, height);
+                drawCoherenceField();
+            }
+        }
+        
+        function drawEnergyField(barrierStart, width, height) {
+            const fieldGradient = ctx.createRadialGradient(
+                barrierStart + width/2, canvas.height/2, 0,
+                barrierStart + width/2, canvas.height/2, width
+            );
+            fieldGradient.addColorStop(0, 'rgba(168, 230, 207, 0.3)');
+            fieldGradient.addColorStop(0.7, 'rgba(168, 230, 207, 0.1)');
+            fieldGradient.addColorStop(1, 'rgba(168, 230, 207, 0)');
+            
+            ctx.fillStyle = fieldGradient;
+            ctx.fillRect(barrierStart - 50, canvas.height/2 - height/2 - 50, width + 100, height + 100);
+        }
+        
+        function drawTemperatureField() {
+            const temp = parseFloat(controls.temperature.value);
+            const tempNormalized = Math.max(0, Math.min(1, (temp - 200) / (600 - 200))); // 0 to 1
+            
+            // Draw thermal motion as moving particles
+            ctx.globalAlpha = 0.2 + tempNormalized * 0.3;
+            const numThermalParticles = Math.floor(tempNormalized * 30 + 10);
+            
+            for (let i = 0; i < numThermalParticles; i++) {
+                const x = (i / numThermalParticles) * canvas.width;
+                const y = canvas.height / 2 + Math.sin(time * 0.05 + i) * tempNormalized * 20;
+                const size = 1 + tempNormalized * 1.5;
+                const speed = tempNormalized * 2;
+                const phase = time * 0.1 * speed + i;
+                
+                // Color from blue (cold) to red (hot)
+                const hue = 240 - tempNormalized * 240; // 240 (blue) to 0 (red)
+                ctx.fillStyle = `hsl(${hue}, 80%, 70%)`;
+                
+                ctx.beginPath();
+                ctx.arc(x + Math.sin(phase) * 8, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Temperature indicator
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = `hsl(${240 - tempNormalized * 240}, 80%, 70%)`;
+            ctx.font = '12px Arial';
+            ctx.fillText(`T: ${temp}K`, 10, 30);
+        }
+        
+        function drawElectricField(barrierStart, width, height) {
+            const field = controls.electricField ? parseFloat(controls.electricField.value) : 0;
+            if (field <= 0.01) return;
+            
+            // Draw electric field lines
+            ctx.strokeStyle = `rgba(255, 255, 0, ${Math.min(field * 3, 0.8)})`;
+            ctx.lineWidth = 2;
+            
+            // Vertical field lines showing electric field strength
+            for (let x = 0; x < canvas.width; x += 40) {
+                ctx.beginPath();
+                
+                // Field strength varies near barrier
+                let fieldStrength = field;
+                if (x >= barrierStart - 50 && x <= barrierStart + width + 50) {
+                    fieldStrength *= 1.5; // Stronger near barrier
+                }
+                
+                const lineLength = fieldStrength * 60;
+                const startY = canvas.height / 2 - lineLength / 2;
+                const endY = canvas.height / 2 + lineLength / 2;
+                
+                // Animated field lines
+                const phase = time * 0.02 + x * 0.01;
+                const offset = Math.sin(phase) * 4;
+                
+                ctx.moveTo(x + offset, startY);
+                ctx.lineTo(x + offset, endY);
+                
+                // Arrow heads pointing down
+                ctx.moveTo(x + offset - 4, endY - 10);
+                ctx.lineTo(x + offset, endY);
+                ctx.lineTo(x + offset + 4, endY - 10);
+                
+                ctx.stroke();
+            }
+            
+            // Field strength label
+            ctx.fillStyle = `rgba(255, 255, 0, ${Math.min(field * 2, 0.9)})`;
+            ctx.font = '12px Arial';
+            ctx.fillText(`E: ${field.toFixed(1)} V/nm`, 10, 50);
+        }
+        
+        function drawMagneticField(barrierStart, width, height) {
+            const field = controls.magneticField ? parseFloat(controls.magneticField.value) : 0;
+            if (field <= 0.01) return;
+            
+            // Draw magnetic field as circular field lines
+            ctx.strokeStyle = `rgba(0, 255, 255, ${Math.min(field * 0.7, 0.8)})`;
+            ctx.lineWidth = 1.5;
+            
+            // Concentric circles representing magnetic field
+            const centerX = barrierStart + width / 2;
+            const centerY = canvas.height / 2;
+            
+            for (let radius = 30; radius < 150; radius += 20) {
+                ctx.beginPath();
+                
+                // Create spiral effect for time animation
+                const spiralOffset = time * 0.01 * field;
+                const scaledRadius = radius * Math.min(field, 1.2);
+                
+                for (let angle = 0; angle <= Math.PI * 2; angle += 0.15) {
+                    const x = centerX + Math.cos(angle + spiralOffset) * scaledRadius;
+                    const y = centerY + Math.sin(angle + spiralOffset) * scaledRadius * 0.6;
+                    
+                    if (angle === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                
+                ctx.globalAlpha = 0.4 + 0.3 * Math.sin(time * 0.03 + radius * 0.1);
+                ctx.stroke();
+            }
+            
+            // Magnetic field direction indicators
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = `rgba(0, 255, 255, ${Math.min(field * 0.9, 1)})`;
+            ctx.font = '16px Arial';
+            ctx.fillText('⊗', centerX - 8, centerY + 5);
+            
+            // Field strength label
+            ctx.font = '12px Arial';
+            ctx.fillText(`B: ${field.toFixed(1)} T`, 10, 70);
+        }
+        
+        function drawWavePacketVisualization(barrierStart, width, height) {
+            const waveWidth = controls.wavepacketWidth ? parseFloat(controls.wavepacketWidth.value) : 20;
+            const phase = controls.phaseShift ? parseFloat(controls.phaseShift.value) : 0;
+            const momentumSpread = controls.momentumSpread ? parseFloat(controls.momentumSpread.value) : 0.5;
+            
+            // Draw wave packet envelope
+            ctx.strokeStyle = 'rgba(255, 100, 255, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x += 2) {
+                const distance = Math.abs(x - canvas.width / 3);
+                const envelope = Math.exp(-distance * distance / (waveWidth * waveWidth * 4));
+                const oscillation = Math.sin(x * 0.1 * momentumSpread + phase + time * 0.05);
+                const y = canvas.height / 2 + envelope * oscillation * 25;
+                
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function drawCoherenceField() {
+            const coherence = controls.quantumCoherence ? parseFloat(controls.quantumCoherence.value) : 0.8;
+            
+            if (coherence < 0.3) return; // Don't show when coherence is low
+            
+            // Very subtle background interference patterns
+            ctx.globalAlpha = coherence * 0.08; // Much more subtle
+            
+            // Sparse interference pattern grid
+            for (let x = 0; x < canvas.width; x += 25) {
+                for (let y = 0; y < canvas.height; y += 25) {
+                    const wave1 = Math.sin((x + time * 0.2) * 0.015) * Math.sin((y + time * 0.2) * 0.015);
+                    const wave2 = Math.sin((x - time * 0.15) * 0.012) * Math.sin((y - time * 0.15) * 0.012);
+                    const interference = (wave1 + wave2) * coherence;
+                    
+                    if (Math.abs(interference) > 0.7) {
+                        const intensity = Math.abs(interference);
+                        const size = 0.8 + intensity * 0.5; // Smaller dots
+                        
+                        // Very subtle purple for background effect
+                        ctx.fillStyle = `rgba(150, 100, 200, ${intensity * 0.15})`;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            
+            // Subtle coherence indicator - only show if coherence is interesting
+            ctx.globalAlpha = 1;
+            if (coherence < 0.9 || coherence > 0.95) {
+                ctx.fillStyle = `rgba(150, 100, 200, 0.6)`;
+                ctx.font = '11px Arial';
+                ctx.fillText(`Coherence: ${(coherence * 100).toFixed(0)}%`, 10, 90);
+            }
+        }
+        
+        function drawEnergyLevels() {
+            const energy = parseFloat(controls.particleEnergy.value);
+            const barrierHeight = parseFloat(controls.barrierHeight.value);
+            const energyY = canvas.height / 2 - (energy * 120) / 2;
+            const barrierY = canvas.height / 2 - (barrierHeight * 120) / 2;
+            
+            // Energy level lines with glow
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 4]);
+            
+            // Particle energy level
+            ctx.strokeStyle = 'rgba(255, 255, 100, 0.8)';
+            ctx.shadowColor = 'rgba(255, 255, 100, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(0, energyY);
+            ctx.lineTo(canvas.width, energyY);
+            ctx.moveTo(0, canvas.height - energyY);
+            ctx.lineTo(canvas.width, canvas.height - energyY);
+            ctx.stroke();
+            
+            // Barrier height level
+            ctx.strokeStyle = 'rgba(255, 100, 100, 0.8)';
+            ctx.shadowColor = 'rgba(255, 100, 100, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(0, barrierY);
+            ctx.lineTo(canvas.width, barrierY);
+            ctx.moveTo(0, canvas.height - barrierY);
+            ctx.lineTo(canvas.width, canvas.height - barrierY);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            ctx.shadowBlur = 0;
+            
+            // Enhanced labels - only show in advanced/expert modes
+            if (mode !== 'basic') {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.font = 'bold 14px Arial';
+                ctx.shadowBlur = 2;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillText('E = ' + energy.toFixed(1) + ' eV', 15, energyY - 8);
+                ctx.fillText('V₀ = ' + barrierHeight.toFixed(1) + ' eV', 15, barrierY - 8);
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        function drawQuantumFluctuations(barrierStart, width, height) {
+            // Quantum vacuum fluctuations visualization
+            ctx.globalAlpha = 0.3;
+            for (let i = 0; i < 20; i++) {
+                const x = barrierStart + Math.random() * width;
+                const y = canvas.height/2 - height/2 + Math.random() * height;
+                const size = 1 + Math.random() * 3;
+                const hue = 180 + Math.random() * 60;
+                
+                ctx.fillStyle = `hsl(${hue}, 70%, 80%)`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawEnhancedProbabilityGraph() {
+            if (probabilityHistory.length < 2) return;
+            
+            const graphX = canvas.width - 200;
+            const graphY = 30;
+            const graphWidth = 170;
+            const graphHeight = 100;
+            
+            // Enhanced background with gradient
+            const bgGradient = ctx.createLinearGradient(graphX, graphY, graphX, graphY + graphHeight);
+            bgGradient.addColorStop(0, 'rgba(0, 50, 100, 0.8)');
+            bgGradient.addColorStop(1, 'rgba(0, 20, 40, 0.9)');
+            
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
+            
+            // Graph border with glow
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(100, 181, 246, 0.5)';
+            ctx.strokeStyle = 'rgba(100, 181, 246, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(graphX, graphY, graphWidth, graphHeight);
+            ctx.shadowBlur = 0;
+            
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 4; i++) {
+                const y = graphY + (graphHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(graphX, y);
+                ctx.lineTo(graphX + graphWidth, y);
+                ctx.stroke();
+            }
+            
+            // Enhanced probability curve with glow
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(100, 181, 246, 0.8)';
+            ctx.strokeStyle = 'rgba(100, 181, 246, 1)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            probabilityHistory.forEach((prob, index) => {
+                const x = graphX + (index / (probabilityHistory.length - 1)) * graphWidth;
+                const y = graphY + graphHeight - (prob * graphHeight);
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            // Fill area under curve
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = 'rgba(100, 181, 246, 1)';
+            ctx.beginPath();
+            ctx.moveTo(graphX, graphY + graphHeight);
+            
+            probabilityHistory.forEach((prob, index) => {
+                const x = graphX + (index / (probabilityHistory.length - 1)) * graphWidth;
+                const y = graphY + graphHeight - (prob * graphHeight);
+                ctx.lineTo(x, y);
+            });
+            
+            ctx.lineTo(graphX + graphWidth, graphY + graphHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Enhanced labels
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.shadowBlur = 2;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillText('Transmission Probability', graphX + 5, graphY + graphHeight + 18);
+            
+            // Current value indicator with animation
+            const currentProb = probabilityHistory[probabilityHistory.length - 1];
+            const indicatorY = graphY + graphHeight - (currentProb * graphHeight);
+            const pulseSize = 6 + Math.sin(time * 0.1) * 2;
+            
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = quantumFluctuations > 0 ? 'rgba(76, 255, 109, 0.8)' : 'rgba(255, 107, 107, 0.8)';
+            ctx.fillStyle = quantumFluctuations > 0 ? 'rgba(76, 255, 109, 1)' : 'rgba(255, 107, 107, 1)';
+            ctx.beginPath();
+            ctx.arc(graphX + graphWidth - 5, indicatorY, pulseSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        
+        function animate() {
+            // Dynamic background
+            const bgGradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+            bgGradient.addColorStop(0, 'rgba(0, 20, 40, 0.1)');
+            bgGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawEnhancedBarrier();
+            if (mode !== 'basic') {
+                drawEnhancedProbabilityGraph();
+            }
+            
+            // Update and draw particles with enhanced effects
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw(ctx);
+                return particle.opacity > 0.01;
+            });
+            
+            time += simulationSpeed;
+            if (Math.floor(time) % 3 === 0) updateDisplay(); // Update display every few frames for performance
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Initialize
+        updateDisplay();
+        updateModeDisplay();
+        animate();
+        
+        // Add some visual flair on load
+        setTimeout(() => {
+            fireParticles(3);
+        }, 1000);
+    </script>
+</body>
+</html>
