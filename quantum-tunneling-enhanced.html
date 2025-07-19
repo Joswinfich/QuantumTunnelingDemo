@@ -46,6 +46,7 @@
             padding: 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 2px 8px rgba(255,255,255,0.1);
             border: 1px solid rgba(100, 181, 246, 0.2);
+            position: relative;
         }
         
         canvas {
@@ -304,13 +305,90 @@
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
+        
+        .fire-buttons {
+            position: absolute;
+            bottom: 20px;
+            z-index: 10;
+        }
+        
+        .fire-buttons.left {
+            left: 20px;
+        }
+        
+        .fire-buttons.right {
+            right: 20px;
+        }
+        
+        .fire-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fire-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .fire-button:active {
+            transform: scale(0.95);
+        }
+        
+        .fire-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .fire-button:active::before {
+            width: 120px;
+            height: 120px;
+        }
+        
+        #fireClassicalSide {
+            background: linear-gradient(45deg, #d32f2f, #f44336);
+        }
+        
+        #fireQuantumSide {
+            background: linear-gradient(45deg, #00796b, #26a69a);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         
         <div class="demo-container">
-            <canvas id="tunnelingCanvas" width="1000" height="500"></canvas>
+            <div style="position: relative;">
+                <canvas id="tunnelingCanvas" width="1000" height="500"></canvas>
+                <div class="fire-buttons left">
+                    <button class="fire-button" id="fireClassicalSide">Fire<br>Classical</button>
+                </div>
+                <div class="fire-buttons right">
+                    <button class="fire-button" id="fireQuantumSide">Fire<br>Quantum</button>
+                </div>
+            </div>
             
             <div class="mode-selector">
                 <div class="mode-btn active" onclick="setMode('basic')">Basic Mode</div>
@@ -415,12 +493,6 @@
                     <div class="value-display" id="simulationSpeedValue">1.0x</div>
                 </div>
                 
-                <div class="control-group">
-                    <button id="fireClassical" style="background: linear-gradient(45deg, #d32f2f, #f44336);">Fire Classical</button>
-                </div>
-                <div class="control-group">
-                    <button id="fireQuantum" style="background: linear-gradient(45deg, #00796b, #26a69a);">Fire Quantum</button>
-                </div>
                 <div class="control-group">
                     <button id="fireBurst">Particle Burst (×10)</button>
                 </div>
@@ -634,8 +706,8 @@
             }
         });
         
-        document.getElementById('fireClassical').addEventListener('click', () => fireNewParticle('classical'));
-        document.getElementById('fireQuantum').addEventListener('click', () => fireNewParticle('quantum'));
+        document.getElementById('fireClassicalSide').addEventListener('click', () => fireNewParticle('classical'));
+        document.getElementById('fireQuantumSide').addEventListener('click', () => fireNewParticle('quantum'));
         document.getElementById('fireBurst').addEventListener('click', () => fireParticles(10));
         document.getElementById('clearParticles').addEventListener('click', clearAllParticles);
         document.getElementById('resetSimulation').addEventListener('click', resetAllSettings);

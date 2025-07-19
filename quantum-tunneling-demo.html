@@ -588,21 +588,20 @@
                             const speed1 = Math.abs(this.velocity);
                             const speed2 = Math.abs(other.velocity);
                             
-                            // Reverse both velocities like bouncing billiard balls
-                            this.velocity = -speed1;
-                            other.velocity = -speed2;
+                            // Simple velocity exchange for billiard ball physics
+                            const tempVel = this.velocity;
+                            this.velocity = other.velocity;
+                            other.velocity = tempVel;
                             
-                            // Strong separation - push particles apart immediately
-                            const pushDistance = collisionRadius + 5;
+                            // Separate particles to prevent overlap
+                            const pushDistance = (collisionRadius - distance) / 2 + 2;
                             const angle = Math.atan2(dy, dx);
                             
-                            // Move this particle away from other
-                            this.x = other.x + Math.cos(angle) * pushDistance;
-                            this.y = other.y + Math.sin(angle) * pushDistance;
-                            
-                            // Move other particle away from this
-                            other.x = this.x - Math.cos(angle) * pushDistance;
-                            other.y = this.y - Math.sin(angle) * pushDistance;
+                            // Push particles apart
+                            this.x += Math.cos(angle) * pushDistance;
+                            this.y += Math.sin(angle) * pushDistance;
+                            other.x -= Math.cos(angle) * pushDistance;
+                            other.y -= Math.sin(angle) * pushDistance;
                             
                             break; // Only handle one collision per frame
                         }
@@ -624,6 +623,11 @@
                 
                 // Update position maintaining speed
                 this.x += nextVelocity;
+                
+                // Ensure minimum speed to prevent getting stuck
+                if (Math.abs(this.velocity) < 30) {
+                    this.velocity = this.velocity > 0 ? 50 : -50;
+                }
             }
             
             updateQuantum() {

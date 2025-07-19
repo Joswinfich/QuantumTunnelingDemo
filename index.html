@@ -22,25 +22,63 @@
         }
         h1 {
             color: #64b5f6;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.5);
+        }
+        .equation {
+            font-size: 1.8em;
+            color: #90caf9;
+            margin: 30px 0;
+            font-family: 'Times New Roman', serif;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(144, 202, 249, 0.5);
         }
         .demo-links {
             display: flex;
             gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 40px;
         }
         .demo-link {
-            background-color: #1976d2;
+            background: linear-gradient(45deg, #1976d2, #42a5f5);
             color: white;
             text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            padding: 20px 40px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
             display: inline-block;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+            position: relative;
+            overflow: hidden;
         }
         .demo-link:hover {
-            background-color: #1565c0;
+            background: linear-gradient(45deg, #1565c0, #2196f3);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+        }
+        .demo-link:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(25, 118, 210, 0.3);
+        }
+        .demo-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .demo-link:active::after {
+            width: 300px;
+            height: 300px;
         }
         p {
             color: #b0b0b0;
@@ -50,8 +88,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Quantum Tunneling Interactive Demos</h1>
-        <p>Explore the fascinating quantum mechanical phenomenon where particles can pass through energy barriers</p>
+        <h1>Quantum Tunneling</h1>
+        <div class="equation">T ≈ e<sup>-2κL</sup></div>
+        <p>where κ = √(2m(V₀-E))/ℏ</p>
         <div class="demo-links">
             <a href="quantum-tunneling-demo.html" class="demo-link">Basic Demo</a>
             <a href="quantum-tunneling-enhanced.html" class="demo-link">Enhanced Demo</a>
